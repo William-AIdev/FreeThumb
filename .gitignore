@@ -1,0 +1,6 @@
+.build/
+.swiftpm/
+.local-home/
+dist/
+.DS_Store
+*.xcodeproj/xcuserdata/
