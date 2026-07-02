@@ -42,3 +42,21 @@ Battery alert retest after expanding the UI range to the full `0%–100%`:
 - Standard battery warning: **passed (user confirmed)**
 - Urgent battery warning: **passed (user confirmed)**
 - Protection remained active for both warning levels: **passed (user confirmed)**
+
+## 2026-07-03 — Planned features automated validation
+
+- Swift formatting and strict lint: **passed**
+- Swift tests: **16 passed in 3 suites**
+- AC disconnect, battery precedence, sustained thermal timing, thermal reset,
+  Low Power Mode, expiry boundary, and cooldown policies: **passed**
+- Messages AppleScript compile without sending: **passed**
+- Mail AppleScript compile without sending: **passed**
+- Release app build and ad-hoc signature verification: **passed**
+- Info.plist and Apple Events usage description validation: **passed**
+- Runtime launch stability: **passed**
+- Webhook URL Keychain read occurs once at startup rather than on each status
+  refresh: **passed**
+
+Live iMessage, Mail, and webhook delivery requires an intentionally configured
+recipient or endpoint. These side-effecting checks remain in
+`docs/planned-features-test-plan.md` for user-controlled validation.

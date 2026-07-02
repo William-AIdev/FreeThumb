@@ -8,16 +8,33 @@ struct MenuBarContentView: View {
   @AppStorage("sessionMinutes") private var sessionMinutes = 120
   @AppStorage("batteryWarningPercent") private var batteryWarningPercent = 35
   @AppStorage("batteryStopPercent") private var batteryUrgentPercent = 20
+  @AppStorage("alertsLocalEnabled") private var alertsLocalEnabled = true
+  @AppStorage("alertsIMessageEnabled") private var alertsIMessageEnabled = false
+  @AppStorage("alertsIMessageRecipient") private var alertsIMessageRecipient = ""
+  @AppStorage("alertsEmailEnabled") private var alertsEmailEnabled = false
+  @AppStorage("alertsEmailRecipient") private var alertsEmailRecipient = ""
+  @AppStorage("alertsWebhookEnabled") private var alertsWebhookEnabled = false
+  @AppStorage("alertsPowerDisconnectEnabled") private var alertsPowerDisconnectEnabled = true
+  @AppStorage("alertsLowPowerModeEnabled") private var alertsLowPowerModeEnabled = true
+  @AppStorage("alertsThermalSustainSeconds") private var alertsThermalSustainSeconds = 30
+  @AppStorage("alertsExpiryWarningMinutes") private var alertsExpiryWarningMinutes = 10
+  @AppStorage("alertsCooldownMinutes") private var alertsCooldownMinutes = 15
+  @StateObject private var webhookSecret = WebhookSecretModel()
 
   var body: some View {
     VStack(spacing: 0) {
       header
       Divider()
-      statusSection
-        .padding(16)
-      Divider()
-      controlsSection
-        .padding(16)
+      ScrollView {
+        VStack(spacing: 0) {
+          statusSection
+            .padding(16)
+          Divider()
+          controlsSection
+            .padding(16)
+        }
+      }
+      .frame(maxHeight: 620)
       Divider()
       footer
     }
@@ -30,6 +47,7 @@ struct MenuBarContentView: View {
         .font(.system(size: 22, weight: .semibold))
         .foregroundStyle(statusColor)
         .frame(width: 28, height: 28)
+        .accessibilityLabel(controller.menuBarAccessibilityLabel)
 
       VStack(alignment: .leading, spacing: 2) {
         Text("FreeThumb")
@@ -84,6 +102,11 @@ struct MenuBarContentView: View {
         messageBanner(error, color: .red, icon: "xmark.octagon.fill")
           .onTapGesture { controller.clearError() }
       }
+
+      if let info = controller.infoMessage {
+        messageBanner(info, color: .blue, icon: "lock.fill")
+          .onTapGesture { controller.clearInfo() }
+      }
     }
   }
 
@@ -121,6 +144,83 @@ struct MenuBarContentView: View {
       }
       .disabled(controlsDisabled)
 
+      DisclosureGroup("Safety alert delivery") {
+        VStack(alignment: .leading, spacing: 10) {
+          Toggle("Local notifications", isOn: $alertsLocalEnabled)
+
+          HStack {
+            Text("Repeat cooldown")
+            Spacer()
+            Picker("Repeat cooldown", selection: $alertsCooldownMinutes) {
+              Text("1m").tag(1)
+              Text("5m").tag(5)
+              Text("15m").tag(15)
+              Text("30m").tag(30)
+              Text("60m").tag(60)
+            }
+            .labelsHidden()
+            .frame(width: 80)
+          }
+
+          HStack {
+            Text("Expiry warning")
+            Spacer()
+            Picker("Expiry warning", selection: $alertsExpiryWarningMinutes) {
+              Text("5m").tag(5)
+              Text("10m").tag(10)
+              Text("15m").tag(15)
+              Text("30m").tag(30)
+            }
+            .labelsHidden()
+            .frame(width: 80)
+          }
+
+          Toggle("Alert when AC disconnects", isOn: $alertsPowerDisconnectEnabled)
+          Toggle("Alert for Low Power Mode", isOn: $alertsLowPowerModeEnabled)
+
+          HStack {
+            Text("Thermal sustained")
+            Spacer()
+            Picker("Thermal sustained", selection: $alertsThermalSustainSeconds) {
+              Text("15s").tag(15)
+              Text("30s").tag(30)
+              Text("60s").tag(60)
+              Text("2m").tag(120)
+            }
+            .labelsHidden()
+            .frame(width: 80)
+          }
+
+          Toggle("iMessage", isOn: $alertsIMessageEnabled)
+          if alertsIMessageEnabled {
+            TextField("Phone or Apple Account", text: $alertsIMessageRecipient)
+              .textFieldStyle(.roundedBorder)
+          }
+
+          Toggle("Email via Mail", isOn: $alertsEmailEnabled)
+          if alertsEmailEnabled {
+            TextField("Recipient email", text: $alertsEmailRecipient)
+              .textFieldStyle(.roundedBorder)
+          }
+
+          Toggle("HTTPS webhook", isOn: $alertsWebhookEnabled)
+          if alertsWebhookEnabled {
+            SecureField("https://…", text: $webhookSecret.url)
+              .textFieldStyle(.roundedBorder)
+            Text("The webhook URL is stored in Keychain.")
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+
+          Button("Send test alert") {
+            controller.sendTestAlert(configuration: alertConfiguration)
+          }
+          .disabled(controller.isTransitioning)
+        }
+        .padding(.top, 8)
+      }
+      .disabled(controlsDisabled)
+
       Button {
         if controller.isProtecting {
           controller.stop()
@@ -128,7 +228,8 @@ struct MenuBarContentView: View {
           controller.start(
             minutes: sessionMinutes,
             batteryWarningPercent: batteryWarningPercent,
-            batteryUrgentPercent: batteryUrgentPercent
+            batteryUrgentPercent: batteryUrgentPercent,
+            alertConfiguration: alertConfiguration
           )
         }
       } label: {
@@ -150,6 +251,21 @@ struct MenuBarContentView: View {
       .buttonStyle(.borderedProminent)
       .controlSize(.large)
       .tint(controller.isProtecting ? .red : .accentColor)
+      .disabled(controller.isTransitioning)
+
+      Button {
+        controller.lockAndKeepRunning(
+          minutes: sessionMinutes,
+          batteryWarningPercent: batteryWarningPercent,
+          batteryUrgentPercent: batteryUrgentPercent,
+          alertConfiguration: alertConfiguration
+        )
+      } label: {
+        Label("Lock & Keep Running", systemImage: "lock.fill")
+          .frame(maxWidth: .infinity)
+      }
+      .buttonStyle(.bordered)
+      .controlSize(.large)
       .disabled(controller.isTransitioning)
     }
   }
@@ -220,9 +336,12 @@ struct MenuBarContentView: View {
   }
 
   private var statusColor: Color {
-    if controller.errorMessage != nil { return .red }
-    if controller.warningMessage != nil { return .orange }
-    return controller.isProtecting ? .green : .secondary
+    switch controller.menuBarStatus {
+    case .inactive: .secondary
+    case .healthy: .green
+    case .warning: .yellow
+    case .critical: .red
+    }
   }
 
   private var controlsDisabled: Bool {
@@ -244,6 +363,23 @@ struct MenuBarContentView: View {
       return String(format: "%d:%02d:%02d remaining", hours, minutes, seconds)
     }
     return String(format: "%02d:%02d remaining", minutes, seconds)
+  }
+
+  private var alertConfiguration: SafetyAlertConfiguration {
+    SafetyAlertConfiguration(
+      localNotificationsEnabled: alertsLocalEnabled,
+      iMessageEnabled: alertsIMessageEnabled,
+      iMessageRecipient: alertsIMessageRecipient,
+      emailEnabled: alertsEmailEnabled,
+      emailRecipient: alertsEmailRecipient,
+      webhookEnabled: alertsWebhookEnabled,
+      webhookURL: webhookSecret.url,
+      alertOnPowerDisconnect: alertsPowerDisconnectEnabled,
+      alertOnLowPowerMode: alertsLowPowerModeEnabled,
+      thermalSustainSeconds: alertsThermalSustainSeconds,
+      expiryWarningMinutes: alertsExpiryWarningMinutes,
+      cooldownMinutes: alertsCooldownMinutes
+    )
   }
 }
 

@@ -77,3 +77,47 @@ struct ProtectionPolicyTests {
     )
   }
 }
+
+struct SafetyAlertThrottleTests {
+  @Test func suppressesRepeatedAlertsDuringCooldown() {
+    var throttle = SafetyAlertThrottle(cooldownSeconds: 60)
+    let start = Date(timeIntervalSince1970: 100)
+
+    let first = throttle.shouldSend(key: "battery", at: start)
+    let suppressed = throttle.shouldSend(key: "battery", at: start.addingTimeInterval(59))
+    let afterCooldown = throttle.shouldSend(
+      key: "battery",
+      at: start.addingTimeInterval(60)
+    )
+
+    #expect(first)
+    #expect(!suppressed)
+    #expect(afterCooldown)
+  }
+
+  @Test func tracksAlertKindsIndependently() {
+    var throttle = SafetyAlertThrottle(cooldownSeconds: 60)
+    let now = Date(timeIntervalSince1970: 100)
+
+    let battery = throttle.shouldSend(key: "battery", at: now)
+    let thermal = throttle.shouldSend(key: "thermal", at: now)
+
+    #expect(battery)
+    #expect(thermal)
+  }
+
+  @Test func canBypassCooldownForRestoreFailure() {
+    var throttle = SafetyAlertThrottle(cooldownSeconds: 60)
+    let now = Date(timeIntervalSince1970: 100)
+
+    let first = throttle.shouldSend(key: "restore", at: now)
+    let bypassed = throttle.shouldSend(
+      key: "restore",
+      at: now.addingTimeInterval(1),
+      ignoringCooldown: true
+    )
+
+    #expect(first)
+    #expect(bypassed)
+  }
+}

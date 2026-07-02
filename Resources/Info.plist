@@ -24,5 +24,7 @@
   <true/>
   <key>NSHumanReadableCopyright</key>
   <string>Copyright © 2026 FreeThumb contributors</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>FreeThumb uses Messages or Mail only when you enable that alert channel.</string>
 </dict>
 </plist>
