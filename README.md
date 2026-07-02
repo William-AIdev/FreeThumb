@@ -66,6 +66,9 @@ Complete the manual channel and colored-icon checks in
 `docs/planned-features-test-plan.md`, then configure release signing and
 notarization.
 
+Windows development lessons and platform boundaries are documented in
+`docs/windows-development-lessons.md`.
+
 ## Planned features
 
 - [x] **Distinct colored status icons**: make the menu bar state immediately
