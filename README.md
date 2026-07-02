@@ -43,3 +43,27 @@ App Store and may require compatibility updates on future macOS versions.
 
 Run the physical lid, AC disconnect, forced-quit, low-battery, and thermal test
 matrix before publishing a release.
+
+## Planned features
+
+- [ ] **Lock & Keep Running**: keep the active FreeThumb protection session
+  running while the macOS screen is locked, so unattended AI coding tasks can
+  continue without leaving the desktop accessible.
+  - The initial version will activate protection first, then direct the user to
+    the standard macOS lock action (`Control-Command-Q`). This uses documented
+    system behavior and requires no Accessibility permission.
+  - A later one-click lock action will only be added if it can avoid broad
+    permissions and pass compatibility testing across supported macOS versions.
+  - Locking must never log the user out, stop the protected task, or change the
+    existing session expiry and recovery behavior.
+- [ ] **Remote safety alerts**: notify the user when a long-running protection
+  session crosses a configurable risk threshold.
+  - Initial triggers: battery below a warning level, sustained serious or
+    critical thermal pressure, AC power disconnected, Low Power Mode enabled,
+    session expiry approaching, or failure to restore the normal sleep setting.
+  - Start with local macOS notifications, then add opt-in delivery through
+    iMessage, email, and a generic webhook for other common messaging services.
+  - Thresholds, cooldowns, and enabled channels must be configurable so repeated
+    sensor updates do not spam the user.
+  - Alerts report the condition and current FreeThumb state; they do not stop a
+    running session unless the user separately enables an automatic action.

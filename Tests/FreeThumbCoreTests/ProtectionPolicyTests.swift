@@ -34,6 +34,18 @@ struct ProtectionPolicyTests {
     #expect(policy.evaluate(snapshot) == .warn(reason: "Battery is at or below 35%"))
   }
 
+  @Test func supportsFullBatteryThresholdRange() {
+    let fullRangePolicy = ProtectionPolicy(
+      batteryWarningPercent: 100,
+      batteryUrgentPercent: 100
+    )
+    let snapshot = makeSnapshot(powerSource: .battery, batteryPercent: 80)
+    #expect(
+      fullRangePolicy.evaluate(snapshot)
+        == .warn(reason: "Battery is critically low at or below 100%")
+    )
+  }
+
   @Test func warnsWhenTemperatureIsSerious() {
     let snapshot = makeSnapshot(thermalLevel: .serious)
     #expect(policy.evaluate(snapshot) == .warn(reason: "System thermal state is serious"))

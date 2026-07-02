@@ -107,13 +107,13 @@ struct MenuBarContentView: View {
           Stepper(
             "Warn at \(batteryWarningPercent)%",
             value: $batteryWarningPercent,
-            in: max(batteryUrgentPercent, 20)...60,
+            in: batteryUrgentPercent...100,
             step: 5
           )
           Stepper(
             "Urgent at \(batteryUrgentPercent)%",
             value: $batteryUrgentPercent,
-            in: 10...min(batteryWarningPercent, 40),
+            in: 0...batteryWarningPercent,
             step: 5
           )
         }
