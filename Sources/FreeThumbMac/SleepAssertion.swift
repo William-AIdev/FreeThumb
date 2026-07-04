@@ -6,20 +6,30 @@ public final class SleepAssertion {
 
   public init() {}
 
-  public func start(duration: TimeInterval) throws {
+  public func start(duration: TimeInterval? = nil) throws {
     guard assertionID == nil else { return }
 
     var newAssertionID: IOPMAssertionID = 0
-    let result = IOPMAssertionCreateWithDescription(
-      kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
-      "FreeThumb AI Work Mode" as CFString,
-      "Keeps local AI coding tasks running for a bounded session" as CFString,
-      nil,
-      nil,
-      duration,
-      kIOPMAssertionTimeoutActionTurnOff as CFString,
-      &newAssertionID
-    )
+    let result: IOReturn
+    if let duration {
+      result = IOPMAssertionCreateWithDescription(
+        kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
+        "FreeThumb AI Work Mode" as CFString,
+        "Keeps local AI coding tasks running for a timed session" as CFString,
+        nil,
+        nil,
+        duration,
+        kIOPMAssertionTimeoutActionTurnOff as CFString,
+        &newAssertionID
+      )
+    } else {
+      result = IOPMAssertionCreateWithName(
+        kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
+        IOPMAssertionLevel(kIOPMAssertionLevelOn),
+        "FreeThumb unlimited AI work mode" as CFString,
+        &newAssertionID
+      )
+    }
 
     guard result == kIOReturnSuccess else {
       throw SleepAssertionError.creationFailed(code: result)

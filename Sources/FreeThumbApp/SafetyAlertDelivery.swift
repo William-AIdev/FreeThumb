@@ -29,7 +29,7 @@ actor SafetyAlertDelivery {
 
   func prepare(configuration: SafetyAlertConfiguration) async {
     if configuration.localNotificationsEnabled {
-      await localNotifications.prepare()
+      try? await localNotifications.prepare()
     }
   }
 

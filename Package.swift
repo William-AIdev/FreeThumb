@@ -28,10 +28,7 @@ let package = Package(
     ),
     .executableTarget(
       name: "FreeThumbApp",
-      dependencies: ["FreeThumbCore", "FreeThumbMac"],
-      linkerSettings: [
-        .linkedFramework("Security")
-      ]
+      dependencies: ["FreeThumbCore", "FreeThumbMac"]
     ),
     .testTarget(
       name: "FreeThumbCoreTests",

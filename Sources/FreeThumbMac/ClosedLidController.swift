@@ -65,6 +65,21 @@ public actor ClosedLidController {
     return result.stdout.contains(#""SleepDisabled" = Yes"#)
   }
 
+  public nonisolated static func needsAdministratorAuthorization() -> Bool {
+    for value in ["0", "1"] {
+      guard
+        let result = try? run(
+          "/usr/bin/sudo",
+          arguments: ["-n", "-l", "/usr/bin/pmset", "disablesleep", value]
+        ),
+        result.exitCode == 0
+      else {
+        return true
+      }
+    }
+    return false
+  }
+
   private func stopWatchdog() {
     guard let watchdog else { return }
     if watchdog.isRunning {

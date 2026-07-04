@@ -4,8 +4,23 @@
 <dict>
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>zh-Hans</string>
+    <string>ja</string>
+    <string>ko</string>
+    <string>es</string>
+    <string>hi</string>
+    <string>fr</string>
+    <string>bn</string>
+    <string>pt</string>
+    <string>ru</string>
+  </array>
   <key>CFBundleExecutable</key>
   <string>FreeThumb</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleIdentifier</key>
   <string>com.freethumb.app</string>
   <key>CFBundleInfoDictionaryVersion</key>

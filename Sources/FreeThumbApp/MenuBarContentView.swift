@@ -14,45 +14,70 @@ struct MenuBarContentView: View {
   @AppStorage("alertsEmailEnabled") private var alertsEmailEnabled = false
   @AppStorage("alertsEmailRecipient") private var alertsEmailRecipient = ""
   @AppStorage("alertsWebhookEnabled") private var alertsWebhookEnabled = false
+  @AppStorage("alertsWebhookURL") private var alertsWebhookURL = ""
   @AppStorage("alertsPowerDisconnectEnabled") private var alertsPowerDisconnectEnabled = true
   @AppStorage("alertsLowPowerModeEnabled") private var alertsLowPowerModeEnabled = true
   @AppStorage("alertsThermalSustainSeconds") private var alertsThermalSustainSeconds = 30
   @AppStorage("alertsExpiryWarningMinutes") private var alertsExpiryWarningMinutes = 10
   @AppStorage("alertsCooldownMinutes") private var alertsCooldownMinutes = 15
-  @StateObject private var webhookSecret = WebhookSecretModel()
+  @AppStorage("showSystemPressureWidget") private var showSystemPressureWidget = true
+  @AppStorage("showBatteryMetricsWidget") private var showBatteryMetricsWidget = true
+  @AppStorage("showHighActivityAppsWidget") private var showHighActivityAppsWidget = false
+  @State private var shouldStartAfterAuthorization = false
+  @State private var showsAuthorizationExplanation = false
 
   var body: some View {
     VStack(spacing: 0) {
       header
       Divider()
-      ScrollView {
-        VStack(spacing: 0) {
-          statusSection
-            .padding(16)
-          Divider()
-          controlsSection
-            .padding(16)
-        }
+      controlsSection
+        .padding(16)
+      Divider()
+      statusSection
+        .padding(16)
+      if showsMonitoringWidgets {
+        Divider()
+        MenuMetricsView(
+          store: controller.metricsStore,
+          showSystemPressure: showSystemPressureWidget,
+          showBatteryMetrics: showBatteryMetricsWidget,
+          showHighActivityApps: showHighActivityAppsWidget
+        )
+        .padding(16)
       }
-      .frame(maxHeight: 620)
       Divider()
       footer
     }
     .frame(width: 340)
+    .onAppear { controller.setMenuVisible(true) }
+    .onDisappear { controller.setMenuVisible(false) }
+    .alert("Administrator approval required", isPresented: $showsAuthorizationExplanation) {
+      Button("Cancel", role: .cancel) {
+        shouldStartAfterAuthorization = false
+      }
+      Button("Continue") {
+        if shouldStartAfterAuthorization {
+          startProtection()
+        }
+        shouldStartAfterAuthorization = false
+      }
+    } message: {
+      Text(
+        "To keep this Mac running with the lid closed, macOS requires one-time approval for only ‘pmset disablesleep 0’ and ‘pmset disablesleep 1’. FreeThumb cannot read or store your password."
+      )
+    }
   }
 
   private var header: some View {
     HStack(spacing: 10) {
-      Image(systemName: controller.menuBarIconName)
-        .font(.system(size: 22, weight: .semibold))
-        .foregroundStyle(statusColor)
+      Image(nsImage: controller.statusIconImage(pointSize: 22))
         .frame(width: 28, height: 28)
         .accessibilityLabel(controller.menuBarAccessibilityLabel)
 
       VStack(alignment: .leading, spacing: 2) {
         Text("FreeThumb")
           .font(.headline)
-        Text(controller.isProtecting ? remainingText : "Ready")
+        Text(controller.isProtecting ? remainingText : localized("Ready"))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -62,7 +87,10 @@ struct MenuBarContentView: View {
       Circle()
         .fill(statusColor)
         .frame(width: 8, height: 8)
-        .accessibilityLabel(controller.isProtecting ? "Protection active" : "Protection inactive")
+        .accessibilityLabel(
+          controller.isProtecting
+            ? localized("Protection active") : localized("Protection inactive")
+        )
     }
     .padding(16)
   }
@@ -84,13 +112,13 @@ struct MenuBarContentView: View {
       StatusRow(
         icon: "leaf.fill",
         title: "Low Power Mode",
-        value: controller.snapshot.lowPowerModeEnabled ? "On" : "Off",
+        value: controller.snapshot.lowPowerModeEnabled ? localized("On") : localized("Off"),
         color: controller.snapshot.lowPowerModeEnabled ? .orange : .secondary
       )
       StatusRow(
         icon: controller.lidState == .closed ? "laptopcomputer.slash" : "laptopcomputer",
         title: "Lid",
-        value: controller.lidState.rawValue.capitalized,
+        value: localized(controller.lidState.rawValue.capitalized),
         color: controller.lidState == .closed ? .blue : .secondary
       )
 
@@ -117,132 +145,35 @@ struct MenuBarContentView: View {
         .foregroundStyle(.secondary)
 
       Picker("Duration", selection: $sessionMinutes) {
+        Text("∞").tag(0)
         Text("30m").tag(30)
         Text("1h").tag(60)
         Text("2h").tag(120)
-        Text("4h").tag(240)
       }
       .pickerStyle(.segmented)
-      .disabled(controlsDisabled)
-
-      DisclosureGroup("Battery alerts") {
-        VStack(spacing: 10) {
-          Stepper(
-            "Warn at \(batteryWarningPercent)%",
-            value: $batteryWarningPercent,
-            in: batteryUrgentPercent...100,
-            step: 5
-          )
-          Stepper(
-            "Urgent at \(batteryUrgentPercent)%",
-            value: $batteryUrgentPercent,
-            in: 0...batteryWarningPercent,
-            step: 5
-          )
-        }
-        .padding(.top, 8)
-      }
-      .disabled(controlsDisabled)
-
-      DisclosureGroup("Safety alert delivery") {
-        VStack(alignment: .leading, spacing: 10) {
-          Toggle("Local notifications", isOn: $alertsLocalEnabled)
-
-          HStack {
-            Text("Repeat cooldown")
-            Spacer()
-            Picker("Repeat cooldown", selection: $alertsCooldownMinutes) {
-              Text("1m").tag(1)
-              Text("5m").tag(5)
-              Text("15m").tag(15)
-              Text("30m").tag(30)
-              Text("60m").tag(60)
-            }
-            .labelsHidden()
-            .frame(width: 80)
-          }
-
-          HStack {
-            Text("Expiry warning")
-            Spacer()
-            Picker("Expiry warning", selection: $alertsExpiryWarningMinutes) {
-              Text("5m").tag(5)
-              Text("10m").tag(10)
-              Text("15m").tag(15)
-              Text("30m").tag(30)
-            }
-            .labelsHidden()
-            .frame(width: 80)
-          }
-
-          Toggle("Alert when AC disconnects", isOn: $alertsPowerDisconnectEnabled)
-          Toggle("Alert for Low Power Mode", isOn: $alertsLowPowerModeEnabled)
-
-          HStack {
-            Text("Thermal sustained")
-            Spacer()
-            Picker("Thermal sustained", selection: $alertsThermalSustainSeconds) {
-              Text("15s").tag(15)
-              Text("30s").tag(30)
-              Text("60s").tag(60)
-              Text("2m").tag(120)
-            }
-            .labelsHidden()
-            .frame(width: 80)
-          }
-
-          Toggle("iMessage", isOn: $alertsIMessageEnabled)
-          if alertsIMessageEnabled {
-            TextField("Phone or Apple Account", text: $alertsIMessageRecipient)
-              .textFieldStyle(.roundedBorder)
-          }
-
-          Toggle("Email via Mail", isOn: $alertsEmailEnabled)
-          if alertsEmailEnabled {
-            TextField("Recipient email", text: $alertsEmailRecipient)
-              .textFieldStyle(.roundedBorder)
-          }
-
-          Toggle("HTTPS webhook", isOn: $alertsWebhookEnabled)
-          if alertsWebhookEnabled {
-            SecureField("https://…", text: $webhookSecret.url)
-              .textFieldStyle(.roundedBorder)
-            Text("The webhook URL is stored in Keychain.")
-              .font(.caption2)
-              .foregroundStyle(.secondary)
-          }
-
-          Button("Send test alert") {
-            controller.sendTestAlert(configuration: alertConfiguration)
-          }
-          .disabled(controller.isTransitioning)
-        }
-        .padding(.top, 8)
-      }
       .disabled(controlsDisabled)
 
       Button {
         if controller.isProtecting {
           controller.stop()
         } else {
-          controller.start(
-            minutes: sessionMinutes,
-            batteryWarningPercent: batteryWarningPercent,
-            batteryUrgentPercent: batteryUrgentPercent,
-            alertConfiguration: alertConfiguration
-          )
+          requestStart()
         }
       } label: {
         if controller.isTransitioning {
           HStack {
             ProgressView()
               .controlSize(.small)
-            Text(controller.isProtecting ? "Restoring sleep…" : "Starting…")
+            Text(
+              controller.isProtecting
+                ? localized("Restoring sleep…") : localized("Starting…")
+            )
           }
           .frame(maxWidth: .infinity)
         } else {
           Label(
-            controller.isProtecting ? "Stop protection" : "Start protection",
+            controller.isProtecting
+              ? localized("Stop protection") : localized("Start protection"),
             systemImage: controller.isProtecting ? "stop.fill" : "play.fill"
           )
           .frame(maxWidth: .infinity)
@@ -253,20 +184,6 @@ struct MenuBarContentView: View {
       .tint(controller.isProtecting ? .red : .accentColor)
       .disabled(controller.isTransitioning)
 
-      Button {
-        controller.lockAndKeepRunning(
-          minutes: sessionMinutes,
-          batteryWarningPercent: batteryWarningPercent,
-          batteryUrgentPercent: batteryUrgentPercent,
-          alertConfiguration: alertConfiguration
-        )
-      } label: {
-        Label("Lock & Keep Running", systemImage: "lock.fill")
-          .frame(maxWidth: .infinity)
-      }
-      .buttonStyle(.bordered)
-      .controlSize(.large)
-      .disabled(controller.isTransitioning)
     }
   }
 
@@ -276,6 +193,24 @@ struct MenuBarContentView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
       Spacer()
+      if #available(macOS 14.0, *) {
+        SettingsLink {
+          Image(systemName: "gearshape")
+        }
+        .simultaneousGesture(
+          TapGesture().onEnded {
+            scheduleSettingsFocus()
+          }
+        )
+        .buttonStyle(.plain)
+        .help("Settings")
+      } else {
+        Button(action: openSettingsWindow) {
+          Image(systemName: "gearshape")
+        }
+        .buttonStyle(.plain)
+        .help("Settings")
+      }
       Button {
         controller.quit()
       } label: {
@@ -305,9 +240,9 @@ struct MenuBarContentView: View {
   private var powerText: String {
     let source =
       switch controller.snapshot.powerSource {
-      case .ac: "AC"
-      case .battery: "Battery"
-      case .unknown: "Unknown"
+      case .ac: localized("AC")
+      case .battery: localized("Battery")
+      case .unknown: localized("Unknown")
       }
     guard let percent = controller.snapshot.batteryPercent else { return source }
     return "\(source) · \(percent)%"
@@ -322,7 +257,7 @@ struct MenuBarContentView: View {
   }
 
   private var thermalText: String {
-    controller.snapshot.thermalLevel.rawValue.capitalized
+    localized(controller.snapshot.thermalLevel.rawValue.capitalized)
   }
 
   private var thermalColor: Color {
@@ -348,21 +283,26 @@ struct MenuBarContentView: View {
     controller.isProtecting || controller.isTransitioning
   }
 
+  private var showsMonitoringWidgets: Bool {
+    showSystemPressureWidget || showBatteryMetricsWidget || showHighActivityAppsWidget
+  }
+
   private var footerText: String {
     if controller.isProtecting {
-      return "System sleep disabled"
+      return localized("System sleep disabled")
     }
-    return "Changes sleep settings while active"
+    return localized("Changes sleep settings while active")
   }
 
   private var remainingText: String {
+    if controller.isUnlimitedSession { return localized("Unlimited") }
     let hours = controller.remainingSeconds / 3600
     let minutes = (controller.remainingSeconds % 3600) / 60
     let seconds = controller.remainingSeconds % 60
     if hours > 0 {
-      return String(format: "%d:%02d:%02d remaining", hours, minutes, seconds)
+      return localizedFormat("%d:%02d:%02d remaining", hours, minutes, seconds)
     }
-    return String(format: "%02d:%02d remaining", minutes, seconds)
+    return localizedFormat("%02d:%02d remaining", minutes, seconds)
   }
 
   private var alertConfiguration: SafetyAlertConfiguration {
@@ -373,7 +313,7 @@ struct MenuBarContentView: View {
       emailEnabled: alertsEmailEnabled,
       emailRecipient: alertsEmailRecipient,
       webhookEnabled: alertsWebhookEnabled,
-      webhookURL: webhookSecret.url,
+      webhookURL: alertsWebhookURL,
       alertOnPowerDisconnect: alertsPowerDisconnectEnabled,
       alertOnLowPowerMode: alertsLowPowerModeEnabled,
       thermalSustainSeconds: alertsThermalSustainSeconds,
@@ -381,11 +321,60 @@ struct MenuBarContentView: View {
       cooldownMinutes: alertsCooldownMinutes
     )
   }
+
+  private func openSettingsWindow() {
+    let application = NSApplication.shared
+    application.activate(ignoringOtherApps: true)
+    if !application.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) {
+      application.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+    }
+
+    scheduleSettingsFocus()
+  }
+
+  private func scheduleSettingsFocus() {
+    NSApplication.shared.activate(ignoringOtherApps: true)
+    Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(150))
+      focusSettingsWindow()
+      try? await Task.sleep(for: .milliseconds(350))
+      focusSettingsWindow()
+    }
+  }
+
+  private func focusSettingsWindow() {
+    let application = NSApplication.shared
+    application.activate(ignoringOtherApps: true)
+    guard
+      let window = application.windows.first(where: {
+        $0.isVisible && $0.canBecomeKey && !($0 is NSPanel)
+      })
+    else { return }
+    window.makeKeyAndOrderFront(nil)
+  }
+
+  private func requestStart() {
+    guard controller.needsAdministratorAuthorization else {
+      startProtection()
+      return
+    }
+    shouldStartAfterAuthorization = true
+    showsAuthorizationExplanation = true
+  }
+
+  private func startProtection() {
+    controller.start(
+      minutes: sessionMinutes,
+      batteryWarningPercent: batteryWarningPercent,
+      batteryUrgentPercent: batteryUrgentPercent,
+      alertConfiguration: alertConfiguration
+    )
+  }
 }
 
 private struct StatusRow: View {
   let icon: String
-  let title: String
+  let title: LocalizedStringKey
   let value: String
   let color: Color
 

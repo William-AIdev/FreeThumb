@@ -25,8 +25,13 @@ final class AppController: ObservableObject {
   @Published private(set) var warningMessage: String?
   @Published private(set) var errorMessage: String?
   @Published private(set) var infoMessage: String?
+  let activityStore: ActivityStore
+  let metricsStore = SystemMetricsStore()
 
   private let systemMonitor = MacSystemMonitor()
+  private let performanceMetricsMonitor = PerformanceMetricsMonitor()
+  private let highActivityAppMonitor = HighActivityAppMonitor()
+  private let powerSourceMonitor = PowerSourceEventMonitor()
   private let lidMonitor = LidStateMonitor()
   private let displayController = BuiltInDisplayController()
   private let assertion = SleepAssertion()
@@ -36,28 +41,65 @@ final class AppController: ObservableObject {
   private var alertConfiguration = SafetyAlertConfiguration()
   private var alertThrottle = SafetyAlertThrottle(cooldownSeconds: 15 * 60)
   private var endDate: Date?
-  private var monitoringTask: Task<Void, Never>?
+  private var safetyMonitoringTask: Task<Void, Never>?
+  private var lidMonitoringTask: Task<Void, Never>?
+  private var countdownTask: Task<Void, Never>?
+  private var metricsMonitoringTask: Task<Void, Never>?
   private var warningSeverity: SafetyAlertSeverity?
   private var alertTriggerEvaluator = SafetyAlertTriggerEvaluator()
+  private var lastActivitySampleAt: Date?
+  private var metricSamples: [SystemMetricSample] = []
+  private var isMenuVisible = false
 
   init() {
+    UserDefaults.standard.register(
+      defaults: [
+        "activityTrackingEnabled": true,
+        "showSystemPressureWidget": true,
+        "showBatteryMetricsWidget": true,
+        "showHighActivityAppsWidget": false,
+        "updateManifestURL": defaultUpdateManifestURL,
+      ]
+    )
+    activityStore = ActivityStore(
+      isEnabled: UserDefaults.standard.bool(forKey: "activityTrackingEnabled")
+    )
     snapshot = systemMonitor.snapshot()
     lidState = lidMonitor.currentState()
-    monitoringTask = Task { [weak self] in
+    powerSourceMonitor.start { [weak self] in
+      self?.refreshSafetyState()
+    }
+    restartSafetyMonitoring()
+    restartLidMonitoring()
+    restartMetricsMonitoring()
+  }
+
+  private func restartSafetyMonitoring() {
+    safetyMonitoringTask?.cancel()
+    let interval = isProtecting ? 30 : 60
+    safetyMonitoringTask = Task { [weak self] in
       while !Task.isCancelled {
-        self?.tick()
-        try? await Task.sleep(for: .seconds(1))
+        try? await Task.sleep(for: .seconds(interval))
+        guard !Task.isCancelled else { return }
+        self?.refreshSafetyState()
+      }
+    }
+  }
+
+  private func restartLidMonitoring() {
+    lidMonitoringTask?.cancel()
+    let interval = isProtecting ? 2 : 10
+    lidMonitoringTask = Task { [weak self] in
+      while !Task.isCancelled {
+        try? await Task.sleep(for: .seconds(interval))
+        guard !Task.isCancelled else { return }
+        self?.updateLidState()
       }
     }
   }
 
   var menuBarIconName: String {
-    switch menuBarStatus {
-    case .inactive: "hand.thumbsup"
-    case .healthy: "hand.thumbsup.fill"
-    case .warning: "exclamationmark.triangle.fill"
-    case .critical: "xmark.octagon.fill"
-    }
+    "hand.thumbsup.fill"
   }
 
   var menuBarStatus: MenuBarStatus {
@@ -75,12 +117,39 @@ final class AppController: ObservableObject {
     }
   }
 
+  var needsAdministratorAuthorization: Bool {
+    ClosedLidController.needsAdministratorAuthorization()
+  }
+
+  var isUnlimitedSession: Bool {
+    isProtecting && endDate == nil
+  }
+
+  func statusIconImage(pointSize: CGFloat) -> NSImage {
+    let image =
+      NSImage(
+        systemSymbolName: menuBarIconName,
+        accessibilityDescription: menuBarAccessibilityLabel
+      ) ?? NSImage()
+    let size = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
+    let sizedImage = image.withSymbolConfiguration(size) ?? image
+
+    guard let color = statusIconColor else {
+      sizedImage.isTemplate = true
+      return sizedImage
+    }
+
+    let palette = NSImage.SymbolConfiguration(paletteColors: [color])
+    let coloredImage = sizedImage.withSymbolConfiguration(palette) ?? sizedImage
+    coloredImage.isTemplate = false
+    return coloredImage
+  }
+
   func start(
     minutes: Int,
     batteryWarningPercent: Int,
     batteryUrgentPercent: Int,
-    alertConfiguration: SafetyAlertConfiguration,
-    showLockInstructionsAfterStart: Bool = false
+    alertConfiguration: SafetyAlertConfiguration
   ) {
     guard !isProtecting, !isTransitioning else { return }
 
@@ -98,7 +167,7 @@ final class AppController: ObservableObject {
     errorMessage = nil
     infoMessage = nil
     Task {
-      let duration = TimeInterval(minutes * 60)
+      let duration = minutes > 0 ? TimeInterval(minutes * 60) : nil
       do {
         _ = try await closedLidController.enable()
 
@@ -109,18 +178,22 @@ final class AppController: ObservableObject {
           throw error
         }
 
-        endDate = Date().addingTimeInterval(duration)
-        remainingSeconds = Int(duration)
+        endDate = duration.map { Date().addingTimeInterval($0) }
+        remainingSeconds = Int(duration ?? 0)
         isProtecting = true
+        restartSafetyMonitoring()
+        restartLidMonitoring()
+        startCountdownIfNeeded()
         warningMessage = nil
         warningSeverity = nil
         alertTriggerEvaluator = SafetyAlertTriggerEvaluator()
+        if activityStore.isEnabled {
+          startActivityTracking()
+        }
         Task {
           await alertDelivery.prepare(configuration: alertConfiguration)
         }
-        if showLockInstructionsAfterStart {
-          infoMessage = "Protection is active. Press Control-Command-Q to lock your Mac."
-        }
+        updateWarningState()
       } catch {
         errorMessage = String(describing: error)
       }
@@ -141,31 +214,38 @@ final class AppController: ObservableObject {
     requestStop(message: nil, quitAfterStop: true)
   }
 
-  func lockAndKeepRunning(
-    minutes: Int,
-    batteryWarningPercent: Int,
-    batteryUrgentPercent: Int,
-    alertConfiguration: SafetyAlertConfiguration
-  ) {
-    if isProtecting {
-      infoMessage = "Protection is active. Press Control-Command-Q to lock your Mac."
-      return
-    }
-    start(
-      minutes: minutes,
-      batteryWarningPercent: batteryWarningPercent,
-      batteryUrgentPercent: batteryUrgentPercent,
-      alertConfiguration: alertConfiguration,
-      showLockInstructionsAfterStart: true
-    )
-  }
-
   func clearError() {
     errorMessage = nil
   }
 
   func clearInfo() {
     infoMessage = nil
+  }
+
+  func setActivityTrackingEnabled(_ enabled: Bool) {
+    guard enabled != activityStore.isEnabled else { return }
+    activityStore.setEnabled(enabled)
+    UserDefaults.standard.set(enabled, forKey: "activityTrackingEnabled")
+
+    guard isProtecting else { return }
+    if enabled {
+      startActivityTracking()
+    } else {
+      finishActivityTracking()
+    }
+  }
+
+  func metricsVisibilityChanged() {
+    restartMetricsMonitoring()
+  }
+
+  func setMenuVisible(_ visible: Bool) {
+    guard visible != isMenuVisible else { return }
+    isMenuVisible = visible
+    if visible {
+      metricsStore.replaceSamples(metricSamples)
+    }
+    restartMetricsMonitoring()
   }
 
   func sendTestAlert(configuration: SafetyAlertConfiguration) {
@@ -193,27 +273,20 @@ final class AppController: ObservableObject {
     }
   }
 
-  private func tick() {
+  private func refreshSafetyState() {
     let previousSnapshot = snapshot
     snapshot = systemMonitor.snapshot()
-    updateLidState()
 
-    guard isProtecting, !isTransitioning, let endDate else { return }
-
-    remainingSeconds = max(0, Int(endDate.timeIntervalSinceNow.rounded(.up)))
-    if remainingSeconds == 0 {
-      sendSafetyAlert(
-        key: "session-expired",
-        title: "FreeThumb session expired",
-        condition: "The protection timer expired",
-        ignoringCooldown: true
-      )
-      requestStop(message: "The protection timer expired", quitAfterStop: false)
-      return
+    guard isProtecting, !isTransitioning else { return }
+    if activityStore.isEnabled {
+      recordActivityIfNeeded()
     }
 
     evaluateSafetyAlerts(previousSnapshot: previousSnapshot)
+    updateWarningState()
+  }
 
+  private func updateWarningState() {
     switch policy.evaluate(snapshot) {
     case .continueRunning:
       warningMessage = nil
@@ -221,6 +294,28 @@ final class AppController: ObservableObject {
     case .warn(let reason):
       warningMessage = reason
       warningSeverity = severity(for: snapshot)
+    }
+  }
+
+  private func startCountdownIfNeeded() {
+    countdownTask?.cancel()
+    guard endDate != nil else { return }
+
+    countdownTask = Task { [weak self] in
+      while !Task.isCancelled {
+        try? await Task.sleep(for: .seconds(1))
+        guard !Task.isCancelled, let self, let endDate = self.endDate else { return }
+        self.remainingSeconds = max(0, Int(endDate.timeIntervalSinceNow.rounded(.up)))
+        guard self.remainingSeconds == 0 else { continue }
+        self.sendSafetyAlert(
+          key: "session-expired",
+          title: "FreeThumb session expired",
+          condition: "The protection timer expired",
+          ignoringCooldown: true
+        )
+        self.requestStop(message: "The protection timer expired", quitAfterStop: false)
+        return
+      }
     }
   }
 
@@ -253,6 +348,9 @@ final class AppController: ObservableObject {
     isTransitioning = true
 
     Task {
+      if activityStore.isEnabled {
+        finishActivityTracking()
+      }
       do {
         try displayController.restoreBuiltInDisplays()
       } catch {
@@ -272,7 +370,11 @@ final class AppController: ObservableObject {
       }
 
       assertion.stop()
+      countdownTask?.cancel()
+      countdownTask = nil
       isProtecting = false
+      restartSafetyMonitoring()
+      restartLidMonitoring()
       endDate = nil
       remainingSeconds = 0
       warningMessage = nil
@@ -291,7 +393,62 @@ final class AppController: ObservableObject {
   }
 
   deinit {
-    monitoringTask?.cancel()
+    safetyMonitoringTask?.cancel()
+    lidMonitoringTask?.cancel()
+    countdownTask?.cancel()
+    metricsMonitoringTask?.cancel()
+  }
+
+  private func restartMetricsMonitoring() {
+    metricsMonitoringTask?.cancel()
+    guard shouldMonitorMetrics else { return }
+
+    metricsMonitoringTask = Task { [weak self] in
+      while !Task.isCancelled {
+        await self?.sampleSystemMetrics()
+        try? await Task.sleep(for: .seconds(60))
+      }
+    }
+  }
+
+  private func sampleSystemMetrics() async {
+    let defaults = UserDefaults.standard
+    let showsGraph =
+      defaults.bool(forKey: "showSystemPressureWidget")
+      || defaults.bool(forKey: "showBatteryMetricsWidget")
+    let now = Date()
+    let graphSampleIsDue =
+      metricSamples.last.map { now.timeIntervalSince($0.capturedAt) >= 60 } ?? true
+    if showsGraph && graphSampleIsDue {
+      let metric = performanceMetricsMonitor.snapshot()
+      metricSamples.append(
+        SystemMetricSample(
+          capturedAt: metric.capturedAt,
+          cpuPercent: metric.cpuPercent,
+          memoryUsedBytes: metric.memoryUsedBytes,
+          memoryPercent: metric.memoryPercent,
+          batteryTemperatureCelsius: metric.batteryTemperatureCelsius,
+          batteryPowerWatts: metric.batteryPowerWatts
+        )
+      )
+      if metricSamples.count > 1_440 {
+        metricSamples.removeFirst(metricSamples.count - 1_440)
+      }
+      if isMenuVisible {
+        metricsStore.replaceSamples(metricSamples)
+      }
+    }
+
+    if isMenuVisible && defaults.bool(forKey: "showHighActivityAppsWidget") {
+      metricsStore.replaceHighActivityApps(await highActivityAppMonitor.sample())
+    }
+  }
+
+  private var shouldMonitorMetrics: Bool {
+    let defaults = UserDefaults.standard
+    return defaults.bool(forKey: "showSystemPressureWidget")
+      || defaults.bool(forKey: "showBatteryMetricsWidget")
+      || (isMenuVisible && defaults.bool(forKey: "showHighActivityAppsWidget"))
   }
 
   private func evaluateSafetyAlerts(previousSnapshot: SystemSnapshot) {
@@ -306,7 +463,7 @@ final class AppController: ObservableObject {
     let triggers = alertTriggerEvaluator.evaluate(
       previous: previousSnapshot,
       current: snapshot,
-      remainingSeconds: remainingSeconds,
+      remainingSeconds: isUnlimitedSession ? Int.max : remainingSeconds,
       configuration: evaluationConfiguration
     )
     for trigger in triggers {
@@ -387,7 +544,9 @@ final class AppController: ObservableObject {
 
     let state =
       isProtecting
-      ? "Protection active; \(formattedDuration(remainingSeconds)) remaining."
+      ? isUnlimitedSession
+        ? "Protection active with no time limit."
+        : "Protection active; \(formattedDuration(remainingSeconds)) remaining."
       : "Protection inactive."
     let message = SafetyAlertMessage(title: title, body: "\(condition). \(state)")
     let configuration = alertConfiguration
@@ -421,5 +580,50 @@ final class AppController: ObservableObject {
     let minutes = max(0, seconds) / 60
     let remainder = max(0, seconds) % 60
     return String(format: "%d:%02d", minutes, remainder)
+  }
+
+  private var statusIconColor: NSColor? {
+    switch menuBarStatus {
+    case .inactive: nil
+    case .healthy: .systemGreen
+    case .warning: .systemYellow
+    case .critical: .systemRed
+    }
+  }
+
+  private func startActivityTracking() {
+    var tracker = SessionActivityTracker()
+    let sample = activitySample()
+    tracker.start(with: sample)
+    activityStore.replaceTracker(tracker)
+    lastActivitySampleAt = sample.capturedAt
+  }
+
+  private func recordActivityIfNeeded() {
+    let now = Date()
+    guard lastActivitySampleAt.map({ now.timeIntervalSince($0) >= 60 }) ?? true else { return }
+    var tracker = activityStore.tracker
+    let sample = activitySample(at: now)
+    tracker.record(sample)
+    activityStore.replaceTracker(tracker)
+    lastActivitySampleAt = sample.capturedAt
+  }
+
+  private func finishActivityTracking() {
+    guard isProtecting, activityStore.tracker.endedAt == nil else { return }
+    var tracker = activityStore.tracker
+    tracker.finish(with: activitySample())
+    activityStore.replaceTracker(tracker)
+    lastActivitySampleAt = nil
+  }
+
+  private func activitySample(at date: Date = Date()) -> SessionActivitySample {
+    SessionActivitySample(
+      capturedAt: date,
+      powerSource: snapshot.powerSource,
+      batteryPercent: snapshot.batteryPercent,
+      thermalLevel: snapshot.thermalLevel,
+      foregroundApp: NSWorkspace.shared.frontmostApplication?.localizedName ?? "Unknown"
+    )
   }
 }

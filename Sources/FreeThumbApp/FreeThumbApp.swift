@@ -3,42 +3,27 @@ import SwiftUI
 
 @main
 struct FreeThumbApp: App {
+  @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
   @StateObject private var controller = AppController()
+  @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
 
   var body: some Scene {
     MenuBarExtra {
       MenuBarContentView(controller: controller)
+        .environment(\.locale, selectedLanguage.locale)
     } label: {
-      Image(nsImage: menuBarImage)
+      Image(nsImage: controller.statusIconImage(pointSize: 16))
         .accessibilityLabel(controller.menuBarAccessibilityLabel)
     }
     .menuBarExtraStyle(.window)
+
+    Settings {
+      SettingsView(controller: controller)
+        .environment(\.locale, selectedLanguage.locale)
+    }
   }
 
-  private var menuBarImage: NSImage {
-    let image =
-      NSImage(
-        systemSymbolName: controller.menuBarIconName,
-        accessibilityDescription: controller.menuBarAccessibilityLabel
-      ) ?? NSImage()
-
-    guard let color = menuBarColor else {
-      image.isTemplate = true
-      return image
-    }
-
-    let configuration = NSImage.SymbolConfiguration(paletteColors: [color])
-    let coloredImage = image.withSymbolConfiguration(configuration) ?? image
-    coloredImage.isTemplate = false
-    return coloredImage
-  }
-
-  private var menuBarColor: NSColor? {
-    switch controller.menuBarStatus {
-    case .inactive: nil
-    case .healthy: .systemGreen
-    case .warning: .systemYellow
-    case .critical: .systemRed
-    }
+  private var selectedLanguage: AppLanguage {
+    AppLanguage(rawValue: appLanguage) ?? .system
   }
 }
