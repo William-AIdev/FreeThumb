@@ -15,9 +15,12 @@ downloads, renders, and other tasks that should not be interrupted by system
 sleep. It also watches battery and thermal conditions without stopping your
 work unexpectedly.
 
+FreeThumb 是一款轻量级 macOS 菜单栏应用，可防止系统休眠，让本地 AI、构建、
+下载和渲染等长时间任务持续运行；同时提供电池、温度与能耗监控，不会擅自中断任务。
+
 ## What it does
 
-- Keeps macOS awake for 30 minutes, 1 hour, 2 hours, or until you stop it.
+- Keeps macOS awake for 30 minutes, 1 hour, 2 hours, 4 hours, or until you stop it.
 - Continues working while macOS is locked.
 - Supports closed-lid operation and restores the previous sleep setting when
   protection ends.
@@ -41,7 +44,11 @@ control uses a private macOS framework.
 Open [GitHub Releases](../../releases/latest) and download the package for your
 platform. macOS and Windows packages are listed there when available.
 
-On macOS, unzip the package and open `FreeThumb.app`.
+On macOS, open the DMG and drag `FreeThumb.app` onto the Applications folder.
+If macOS says it cannot verify FreeThumb, do not move it to Trash. After the
+blocked launch, open **System Settings → Privacy & Security**, scroll to
+Security, click **Open Anyway**, then confirm **Open**. Only override this check
+for a package downloaded from this repository that you trust.
 
 Prefer to build it yourself? Follow the steps below.
 
@@ -60,6 +67,12 @@ From the project directory, build and open the app:
 open dist/FreeThumb.app
 ```
 
+To create the drag-and-drop DMG:
+
+```sh
+./scripts/build-dmg.sh
+```
+
 FreeThumb appears as a thumb icon in the menu bar. It does not appear in the
 Dock.
 
@@ -67,11 +80,11 @@ Dock.
 
 1. Click the thumb icon in the menu bar.
 2. Choose a duration. Select `∞` to keep protection active until you stop it.
-3. Click **Start protection**.
+3. Click **Enable Sleep Prevention Mode**.
 4. Approve the macOS administrator prompt on first use.
 5. Lock your Mac with `Control-Command-Q`, or close the lid. Your task continues
    running.
-6. Open FreeThumb and click **Stop protection** when the task is finished.
+6. Open FreeThumb and click **Disable Sleep Prevention Mode** when the task is finished.
 
 Keep the Mac connected to power and the network when the task depends on them.
 FreeThumb prevents sleep; it cannot prevent power loss, network loss, an app
@@ -104,12 +117,14 @@ Click the gear button at the bottom of the FreeThumb menu.
 - **Check for updates:** enter a project-provided HTTPS release manifest URL,
   then check manually. FreeThumb never installs an update silently.
 
-The charts sample once per minute and retain up to 24 hours in memory. The
+The charts sample every 30 seconds and retain up to 24 hours in memory. The
 combined battery chart uses temperature on the left axis and battery power on
 the right axis. Battery discharge power may be unavailable while connected to
 AC power. The high-energy list includes only third-party apps run by the current
-user and ranks them using macOS per-process energy counters. It does not claim
-to reproduce Activity Monitor's private Energy Impact score.
+user and ranks them using a running average of the relative values reported by
+macOS `top`, aggregated across each app's processes. It is not power measured
+in watts. Sampling occurs every five minutes in the background and every minute
+while the menu is open, only when this widget is enabled.
 
 ### Protection
 

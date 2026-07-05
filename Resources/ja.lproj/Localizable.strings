@@ -19,6 +19,11 @@
 "30m" = "30分";
 "1h" = "1時間";
 "2h" = "2時間";
+"4h" = "4時間";
+"Enable Sleep Prevention Mode" = "スリープ防止モードを有効にする";
+"Disable Sleep Prevention Mode" = "スリープ防止モードを無効にする";
+"Enabling Sleep Prevention Mode…" = "スリープ防止モードを有効化中…";
+"Disabling Sleep Prevention Mode…" = "スリープ防止モードを無効化中…";
 "Restoring sleep…" = "スリープ設定を復元中…";
 "Starting…" = "開始中…";
 "Stop protection" = "保護を停止";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "バッテリー温度と電力";
 "Battery temperature and power chart" = "バッテリー温度・電力グラフ";
 "No third-party app is currently using notable energy." = "現在、目立った電力を使用しているサードパーティ製アプリはありません。";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "電力はmacOSのプロセス別エネルギーカウンターから算出します。アクティビティモニタの「エネルギー影響」指標は公開されていません。";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "グラフは1分ごとに記録し、最大24時間をメモリに保持します。高電力アプリには現在のユーザーが実行するサードパーティ製アプリのみが含まれます。";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "グラフは30秒ごとに記録し、最大24時間をメモリに保持します。高電力アプリには現在のユーザーが実行するサードパーティ製アプリのみが含まれます。数値は監視中のmacOS topサンプルを平均した長期的な相対推定値で、ワットではありません。";
+"Dismiss" = "閉じる";

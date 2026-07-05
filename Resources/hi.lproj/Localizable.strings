@@ -18,6 +18,11 @@
 "30m" = "30 मिनट";
 "1h" = "1 घंटा";
 "2h" = "2 घंटे";
+"4h" = "4 घंटे";
+"Enable Sleep Prevention Mode" = "स्लीप रोकथाम मोड चालू करें";
+"Disable Sleep Prevention Mode" = "स्लीप रोकथाम मोड बंद करें";
+"Enabling Sleep Prevention Mode…" = "स्लीप रोकथाम मोड चालू हो रहा है…";
+"Disabling Sleep Prevention Mode…" = "स्लीप रोकथाम मोड बंद हो रहा है…";
 "Restoring sleep…" = "स्लीप सेटिंग बहाल हो रही है…";
 "Starting…" = "शुरू हो रहा है…";
 "Stop protection" = "सुरक्षा रोकें";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "बैटरी तापमान और पावर";
 "Battery temperature and power chart" = "बैटरी तापमान और पावर चार्ट";
 "No third-party app is currently using notable energy." = "अभी कोई तृतीय-पक्ष ऐप उल्लेखनीय ऊर्जा उपयोग नहीं कर रहा है।";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "पावर macOS के प्रति-प्रक्रिया ऊर्जा काउंटर से मापी जाती है; Activity Monitor का Energy Impact पैमाना सार्वजनिक नहीं है।";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "चार्ट हर मिनट नमूना लेते हैं और 24 घंटे तक मेमोरी में रखते हैं। उच्च ऊर्जा ऐप में केवल वर्तमान उपयोगकर्ता द्वारा चलाए गए तृतीय-पक्ष ऐप शामिल हैं।";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "चार्ट हर 30 सेकंड में नमूना लेते हैं और 24 घंटे तक मेमोरी में रखते हैं। उच्च ऊर्जा ऐप में केवल वर्तमान उपयोगकर्ता द्वारा चलाए गए तृतीय-पक्ष ऐप शामिल हैं। यह संख्या मॉनिटरिंग चालू रहने के दौरान macOS top नमूनों का दीर्घकालिक सापेक्ष औसत है; यह वाट नहीं है।";
+"Dismiss" = "बंद करें";

@@ -18,6 +18,11 @@
 "30m" = "30 min";
 "1h" = "1 h";
 "2h" = "2 h";
+"4h" = "4 h";
+"Enable Sleep Prevention Mode" = "Activer le mode anti-veille";
+"Disable Sleep Prevention Mode" = "Désactiver le mode anti-veille";
+"Enabling Sleep Prevention Mode…" = "Activation du mode anti-veille…";
+"Disabling Sleep Prevention Mode…" = "Désactivation du mode anti-veille…";
 "Restoring sleep…" = "Restauration de la veille…";
 "Starting…" = "Démarrage…";
 "Stop protection" = "Arrêter la protection";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "Température et puissance de la batterie";
 "Battery temperature and power chart" = "Graphique température et puissance de batterie";
 "No third-party app is currently using notable energy." = "Aucune app tierce n’utilise actuellement une quantité notable d’énergie.";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "La puissance utilise les compteurs d’énergie par processus de macOS ; l’échelle Impact énergétique du Moniteur d’activité n’est pas publique.";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "Les graphiques prélèvent une mesure par minute et conservent jusqu’à 24 heures en mémoire. Les apps énergivores incluent uniquement les apps tierces exécutées par l’utilisateur actuel.";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Les graphiques prélèvent une mesure toutes les 30 secondes et conservent jusqu’à 24 heures en mémoire. Les apps énergivores incluent uniquement les apps tierces exécutées par l’utilisateur actuel. Le nombre est une estimation relative à long terme, moyenne des échantillons de top de macOS pendant la surveillance ; ce ne sont pas des watts.";
+"Dismiss" = "Fermer";

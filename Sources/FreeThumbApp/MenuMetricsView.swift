@@ -15,7 +15,6 @@ struct MenuMetricsView: View {
         metricCard(
           "System pressure",
           currentValue: pressureValue,
-          averageValue: pressureAverageValue,
           metrics: [.pressure]
         ) {
           Chart(chartSamples) { sample in
@@ -53,7 +52,15 @@ struct MenuMetricsView: View {
           }
           .chartYScale(domain: 0...100)
           .chartXAxis {
-            AxisMarks(preset: .aligned, values: .automatic(desiredCount: 3))
+            AxisMarks(preset: .aligned, values: .automatic(desiredCount: 3)) { value in
+              AxisGridLine()
+              AxisTick()
+              AxisValueLabel {
+                if let date = value.as(Date.self) {
+                  Text(date, format: .dateTime.hour().minute())
+                }
+              }
+            }
           }
           .chartYAxis {
             AxisMarks { value in
@@ -91,7 +98,6 @@ struct MenuMetricsView: View {
         metricCard(
           "Battery temperature & power",
           currentValue: batteryMetricsValue,
-          averageValue: batteryMetricsAverageValue,
           metrics: [.battery],
           chartHeight: 165
         ) {
@@ -120,22 +126,14 @@ struct MenuMetricsView: View {
                 Text(app.name)
                   .lineLimit(1)
                 Spacer()
-                if let powerWatts = app.powerWatts {
-                  Text(String(format: "%.2f W", powerWatts))
-                } else {
-                  Text(String(format: "CPU %.1f%%", app.cpuPercent))
-                }
+                Text(String(format: "%.1f", app.energyImpact))
+                  .monospacedDigit()
                 Text(formattedBytes(app.memoryBytes))
                   .foregroundStyle(.secondary)
               }
               .font(.caption)
             }
           }
-          Text(
-            "Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available."
-          )
-          .font(.caption2)
-          .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
       }
@@ -145,7 +143,6 @@ struct MenuMetricsView: View {
   private func metricCard<Content: View>(
     _ title: LocalizedStringKey,
     currentValue: String,
-    averageValue: String,
     metrics: Set<MetricKind>,
     chartHeight: CGFloat = 110,
     @ViewBuilder chart: () -> Content
@@ -163,11 +160,6 @@ struct MenuMetricsView: View {
           .lineLimit(1)
           .minimumScaleFactor(0.7)
       }
-      Text(averageValue)
-        .font(.caption2.monospacedDigit())
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-        .minimumScaleFactor(0.7)
       chart()
         .frame(height: chartHeight)
     }
@@ -202,29 +194,6 @@ struct MenuMetricsView: View {
 
   private var batteryMetricsValue: String {
     "\(temperatureValue) · \(powerValue)"
-  }
-
-  private var pressureAverageValue: String {
-    let cpuValues = store.samples.compactMap(\.cpuPercent)
-    let memoryValues = store.samples.map(\.memoryPercent)
-    guard let cpuAverage = average(cpuValues), let memoryAverage = average(memoryValues) else {
-      return localized("Average unavailable")
-    }
-    return localizedFormat("Average CPU %.1f%% · Memory %.1f%%", cpuAverage, memoryAverage)
-  }
-
-  private var temperatureAverageValue: String {
-    temperatureAverage.map { localizedFormat("Average %.1f°C", $0) }
-      ?? localized("Average unavailable")
-  }
-
-  private var powerAverageValue: String {
-    powerAverage.map { localizedFormat("Average %.2f W", $0) }
-      ?? localized("Average unavailable")
-  }
-
-  private var batteryMetricsAverageValue: String {
-    "\(temperatureAverageValue) · \(powerAverageValue)"
   }
 
   private var batteryChart: some View {
@@ -266,22 +235,18 @@ struct MenuMetricsView: View {
           }
         }
       }
-      if let temperatureAverage {
-        RuleMark(
-          y: .value("Temperature average", normalized(temperatureAverage, in: temperatureDomain))
-        )
-        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 4]))
-        .foregroundStyle(.blue.opacity(0.55))
-      }
-      if let powerAverage {
-        RuleMark(y: .value("Power average", normalized(powerAverage, in: powerDomain)))
-          .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 4]))
-          .foregroundStyle(.purple.opacity(0.55))
-      }
     }
     .chartYScale(domain: 0...1)
     .chartXAxis {
-      AxisMarks(preset: .aligned, values: .automatic(desiredCount: 3))
+      AxisMarks(preset: .aligned, values: .automatic(desiredCount: 3)) { value in
+        AxisGridLine()
+        AxisTick()
+        AxisValueLabel {
+          if let date = value.as(Date.self) {
+            Text(date, format: .dateTime.hour().minute())
+          }
+        }
+      }
     }
     .chartYAxis {
       AxisMarks(position: .leading, values: [0.0, 0.5, 1.0]) { value in
@@ -359,14 +324,6 @@ struct MenuMetricsView: View {
     domain.lowerBound + value * (domain.upperBound - domain.lowerBound)
   }
 
-  private var temperatureAverage: Double? {
-    average(store.samples.compactMap(\.batteryTemperatureCelsius))
-  }
-
-  private var powerAverage: Double? {
-    average(store.samples.compactMap(\.batteryPowerWatts))
-  }
-
   private var chartSamples: [SystemMetricSample] {
     let maximumPoints = 240
     guard store.samples.count > maximumPoints else { return store.samples }
@@ -380,11 +337,6 @@ struct MenuMetricsView: View {
     let formatter = ByteCountFormatter()
     formatter.countStyle = .memory
     return formatter.string(fromByteCount: Int64(bytes))
-  }
-
-  private func average(_ values: [Double]) -> Double? {
-    guard !values.isEmpty else { return nil }
-    return values.reduce(0, +) / Double(values.count)
   }
 
   private func hoverOverlay(

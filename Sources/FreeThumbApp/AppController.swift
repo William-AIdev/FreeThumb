@@ -48,6 +48,7 @@ final class AppController: ObservableObject {
   private var warningSeverity: SafetyAlertSeverity?
   private var alertTriggerEvaluator = SafetyAlertTriggerEvaluator()
   private var lastActivitySampleAt: Date?
+  private var lastHighActivitySampleAt: Date?
   private var metricSamples: [SystemMetricSample] = []
   private var isMenuVisible = false
 
@@ -132,15 +133,8 @@ final class AppController: ObservableObject {
         accessibilityDescription: menuBarAccessibilityLabel
       ) ?? NSImage()
     let size = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
-    let sizedImage = image.withSymbolConfiguration(size) ?? image
-
-    guard let color = statusIconColor else {
-      sizedImage.isTemplate = true
-      return sizedImage
-    }
-
-    let palette = NSImage.SymbolConfiguration(paletteColors: [color])
-    let coloredImage = sizedImage.withSymbolConfiguration(palette) ?? sizedImage
+    let palette = NSImage.SymbolConfiguration(paletteColors: [statusIconColor])
+    let coloredImage = image.withSymbolConfiguration(size.applying(palette)) ?? image
     coloredImage.isTemplate = false
     return coloredImage
   }
@@ -406,7 +400,8 @@ final class AppController: ObservableObject {
     metricsMonitoringTask = Task { [weak self] in
       while !Task.isCancelled {
         await self?.sampleSystemMetrics()
-        try? await Task.sleep(for: .seconds(60))
+        let interval = self?.metricsMonitoringIntervalSeconds ?? 60
+        try? await Task.sleep(for: .seconds(interval))
       }
     }
   }
@@ -418,7 +413,7 @@ final class AppController: ObservableObject {
       || defaults.bool(forKey: "showBatteryMetricsWidget")
     let now = Date()
     let graphSampleIsDue =
-      metricSamples.last.map { now.timeIntervalSince($0.capturedAt) >= 60 } ?? true
+      metricSamples.last.map { now.timeIntervalSince($0.capturedAt) >= 30 } ?? true
     if showsGraph && graphSampleIsDue {
       let metric = performanceMetricsMonitor.snapshot()
       metricSamples.append(
@@ -431,16 +426,20 @@ final class AppController: ObservableObject {
           batteryPowerWatts: metric.batteryPowerWatts
         )
       )
-      if metricSamples.count > 1_440 {
-        metricSamples.removeFirst(metricSamples.count - 1_440)
+      if metricSamples.count > 2_880 {
+        metricSamples.removeFirst(metricSamples.count - 2_880)
       }
       if isMenuVisible {
         metricsStore.replaceSamples(metricSamples)
       }
     }
 
-    if isMenuVisible && defaults.bool(forKey: "showHighActivityAppsWidget") {
+    let highActivityInterval: TimeInterval = isMenuVisible ? 60 : 5 * 60
+    let highActivitySampleIsDue =
+      lastHighActivitySampleAt.map { now.timeIntervalSince($0) >= highActivityInterval } ?? true
+    if defaults.bool(forKey: "showHighActivityAppsWidget") && highActivitySampleIsDue {
       metricsStore.replaceHighActivityApps(await highActivityAppMonitor.sample())
+      lastHighActivitySampleAt = Date()
     }
   }
 
@@ -448,7 +447,16 @@ final class AppController: ObservableObject {
     let defaults = UserDefaults.standard
     return defaults.bool(forKey: "showSystemPressureWidget")
       || defaults.bool(forKey: "showBatteryMetricsWidget")
-      || (isMenuVisible && defaults.bool(forKey: "showHighActivityAppsWidget"))
+      || defaults.bool(forKey: "showHighActivityAppsWidget")
+  }
+
+  private var metricsMonitoringIntervalSeconds: TimeInterval {
+    let defaults = UserDefaults.standard
+    let showsGraph =
+      defaults.bool(forKey: "showSystemPressureWidget")
+      || defaults.bool(forKey: "showBatteryMetricsWidget")
+    if showsGraph { return 30 }
+    return isMenuVisible ? 60 : 5 * 60
   }
 
   private func evaluateSafetyAlerts(previousSnapshot: SystemSnapshot) {
@@ -582,9 +590,9 @@ final class AppController: ObservableObject {
     return String(format: "%d:%02d", minutes, remainder)
   }
 
-  private var statusIconColor: NSColor? {
+  private var statusIconColor: NSColor {
     switch menuBarStatus {
-    case .inactive: nil
+    case .inactive: .labelColor
     case .healthy: .systemGreen
     case .warning: .systemYellow
     case .critical: .systemRed

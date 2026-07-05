@@ -19,6 +19,11 @@
 "30m" = "30분";
 "1h" = "1시간";
 "2h" = "2시간";
+"4h" = "4시간";
+"Enable Sleep Prevention Mode" = "절전 방지 모드 켜기";
+"Disable Sleep Prevention Mode" = "절전 방지 모드 끄기";
+"Enabling Sleep Prevention Mode…" = "절전 방지 모드 켜는 중…";
+"Disabling Sleep Prevention Mode…" = "절전 방지 모드 끄는 중…";
 "Restoring sleep…" = "잠자기 설정 복원 중…";
 "Starting…" = "시작 중…";
 "Stop protection" = "보호 중지";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "배터리 온도 및 전력";
 "Battery temperature and power chart" = "배터리 온도 및 전력 차트";
 "No third-party app is currently using notable energy." = "현재 눈에 띄는 에너지를 사용하는 타사 앱이 없습니다.";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "전력은 macOS의 프로세스별 에너지 카운터로 계산합니다. 활성 상태 보기의 에너지 영향 척도는 공개되어 있지 않습니다.";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "차트는 1분마다 샘플링하고 메모리에 최대 24시간의 데이터를 보관합니다. 고에너지 앱에는 현재 사용자가 실행한 타사 앱만 포함됩니다.";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "차트는 30초마다 샘플링하고 메모리에 최대 24시간의 데이터를 보관합니다. 고에너지 앱에는 현재 사용자가 실행한 타사 앱만 포함됩니다. 숫자는 모니터링이 켜진 동안 macOS top 샘플을 평균한 장기 상대 추정치이며 와트가 아닙니다.";
+"Dismiss" = "닫기";

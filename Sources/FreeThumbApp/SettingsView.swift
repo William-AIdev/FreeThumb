@@ -95,7 +95,7 @@ struct SettingsView: View {
         Toggle("Battery temperature and power chart", isOn: $showBatteryMetricsWidget)
         Toggle("High energy apps (estimated)", isOn: $showHighActivityAppsWidget)
         helpText(
-          "Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user."
+          "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts."
         )
       }
       .onChange(of: showSystemPressureWidget) { _ in controller.metricsVisibilityChanged() }

@@ -2,5 +2,10 @@
 "Battery temperature & power" = "Battery temperature & power";
 "Battery temperature and power chart" = "Battery temperature and power chart";
 "No third-party app is currently using notable energy." = "No third-party app is currently using notable energy.";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available.";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user.";
+"4h" = "4h";
+"Enable Sleep Prevention Mode" = "Enable Sleep Prevention Mode";
+"Disable Sleep Prevention Mode" = "Disable Sleep Prevention Mode";
+"Enabling Sleep Prevention Mode…" = "Enabling Sleep Prevention Mode…";
+"Disabling Sleep Prevention Mode…" = "Disabling Sleep Prevention Mode…";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts.";
+"Dismiss" = "Dismiss";

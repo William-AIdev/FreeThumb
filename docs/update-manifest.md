@@ -8,8 +8,8 @@ Users can replace this URL in Settings when testing another release channel.
 
 ```json
 {
-  "version": "0.1.0",
-  "downloadURL": "https://github.com/William-AIdev/FreeThumb/releases/download/v0.1.0/FreeThumb-macOS-0.1.0.zip"
+  "version": "0.1.1",
+  "downloadURL": "https://github.com/William-AIdev/FreeThumb/releases/download/v0.1.1/FreeThumb-macOS-0.1.1.dmg"
 }
 ```
 

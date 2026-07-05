@@ -2,29 +2,11 @@ import Darwin
 import Foundation
 
 actor HighActivityAppMonitor {
-  private var previousSamples: [Int32: ProcessSample] = [:]
-  private var previousSampleDate: Date?
+  private var runningEstimates: [String: RunningEstimate] = [:]
 
   func sample() async -> [HighActivityApp] {
-    var currentDate = Date()
-    var currentSamples = await readProcessSamples()
-
-    if previousSampleDate == nil {
-      previousSamples = Dictionary(uniqueKeysWithValues: currentSamples.map { ($0.processID, $0) })
-      previousSampleDate = currentDate
-      try? await Task.sleep(for: .seconds(1))
-      guard !Task.isCancelled else { return [] }
-      currentDate = Date()
-      currentSamples = await readProcessSamples()
-    }
-
-    guard let previousSampleDate else { return [] }
-    let elapsedSeconds = max(currentDate.timeIntervalSince(previousSampleDate), 0.001)
-    let results = rankedApps(from: currentSamples, elapsedSeconds: elapsedSeconds)
-
-    previousSamples = Dictionary(uniqueKeysWithValues: currentSamples.map { ($0.processID, $0) })
-    self.previousSampleDate = currentDate
-    return Array(results.prefix(5))
+    let currentSamples = await readProcessSamples()
+    return Array(rankedApps(from: currentSamples).prefix(5))
   }
 
   private func readProcessSamples() async -> [ProcessSample] {
@@ -33,45 +15,36 @@ actor HighActivityAppMonitor {
     }.value
   }
 
-  private func rankedApps(
-    from currentSamples: [ProcessSample],
-    elapsedSeconds: TimeInterval
-  ) -> [HighActivityApp] {
+  private func rankedApps(from currentSamples: [ProcessSample]) -> [HighActivityApp] {
     let grouped = Dictionary(grouping: currentSamples, by: \.bundlePath)
     let apps = grouped.compactMap { bundlePath, processes -> HighActivityApp? in
       guard let processID = processes.first?.processID else { return nil }
-      let energyNanojoules = processes.reduce(UInt64(0)) { total, process in
-        guard let previous = previousSamples[process.processID],
-          process.energyNanojoules >= previous.energyNanojoules
-        else { return total }
-        return total + process.energyNanojoules - previous.energyNanojoules
-      }
-      let powerWatts = Double(energyNanojoules) / elapsedSeconds / 1_000_000_000
+      let energyImpact = processes.reduce(0) { $0 + $1.energyImpact }
       let cpuPercent = processes.reduce(0) { $0 + $1.cpuPercent }
-      guard powerWatts >= 0.01 || cpuPercent >= 0.5 else { return nil }
+      guard energyImpact >= 0.1 || cpuPercent >= 0.5 else { return nil }
+      var estimate = runningEstimates[bundlePath] ?? RunningEstimate()
+      estimate.add(energyImpact)
+      runningEstimates[bundlePath] = estimate
 
       return HighActivityApp(
         processID: processID,
         name: URL(fileURLWithPath: bundlePath).deletingPathExtension().lastPathComponent,
-        powerWatts: energyNanojoules > 0 ? powerWatts : nil,
+        energyImpact: estimate.average,
         cpuPercent: cpuPercent,
         memoryBytes: processes.reduce(0) { $0 + $1.memoryBytes }
       )
     }
 
     return apps.sorted {
-      switch ($0.powerWatts, $1.powerWatts) {
-      case (let left?, let right?) where left != right: return left > right
-      case (_?, nil): return true
-      case (nil, _?): return false
-      default:
-        if $0.cpuPercent == $1.cpuPercent { return $0.memoryBytes > $1.memoryBytes }
-        return $0.cpuPercent > $1.cpuPercent
-      }
+      if $0.energyImpact == $1.energyImpact { return $0.cpuPercent > $1.cpuPercent }
+      return $0.energyImpact > $1.energyImpact
     }
   }
 
   private static func readProcessSamples() -> [ProcessSample] {
+    let activityByProcess = readTopActivity()
+    guard !activityByProcess.isEmpty else { return [] }
+
     let process = Process()
     let output = Pipe()
     process.executableURL = URL(fileURLWithPath: "/bin/ps")
@@ -87,32 +60,78 @@ actor HighActivityAppMonitor {
         let text = String(data: data, encoding: .utf8)
       else { return [] }
 
-      return text.split(separator: "\n").compactMap { parse(String($0)) }
+      return text.split(separator: "\n").compactMap {
+        parse(String($0), activityByProcess: activityByProcess)
+      }
     } catch {
       return []
     }
   }
 
-  private static func parse(_ line: String) -> ProcessSample? {
+  private static func parse(
+    _ line: String,
+    activityByProcess: [Int32: ProcessActivity]
+  ) -> ProcessSample? {
     let fields = line.split(maxSplits: 4, whereSeparator: { $0.isWhitespace })
     guard fields.count == 5,
       let processID = Int32(fields[0]),
       let userID = uid_t(fields[1]),
       userID == getuid(),
-      let cpuPercent = Double(fields[2]),
       let residentKilobytes = UInt64(fields[3]),
       let bundlePath = appBundlePath(from: String(fields[4])),
       isThirdPartyApp(at: bundlePath),
-      bundlePath != Bundle.main.bundlePath
+      bundlePath != Bundle.main.bundlePath,
+      let activity = activityByProcess[processID]
     else { return nil }
 
     return ProcessSample(
       processID: processID,
       bundlePath: bundlePath,
-      energyNanojoules: energyNanojoules(for: processID) ?? 0,
-      cpuPercent: cpuPercent,
+      energyImpact: activity.energyImpact,
+      cpuPercent: activity.cpuPercent,
       memoryBytes: residentKilobytes * 1_024
     )
+  }
+
+  private static func readTopActivity() -> [Int32: ProcessActivity] {
+    let process = Process()
+    let output = Pipe()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/top")
+    process.arguments = ["-l", "2", "-n", "100", "-stats", "pid,cpu,power", "-o", "power"]
+    var environment = ProcessInfo.processInfo.environment
+    environment["LC_ALL"] = "C"
+    process.environment = environment
+    process.standardOutput = output
+    process.standardError = FileHandle.nullDevice
+
+    do {
+      try process.run()
+      let data = output.fileHandleForReading.readDataToEndOfFile()
+      process.waitUntilExit()
+      guard process.terminationStatus == 0,
+        let text = String(data: data, encoding: .utf8)
+      else { return [:] }
+
+      let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
+      guard let headerIndex = lines.lastIndex(where: { $0.hasPrefix("PID") }) else { return [:] }
+      return Dictionary(
+        uniqueKeysWithValues: lines[lines.index(after: headerIndex)...].compactMap {
+          parseTopActivity(String($0))
+        }
+      )
+    } catch {
+      return [:]
+    }
+  }
+
+  private static func parseTopActivity(_ line: String) -> (Int32, ProcessActivity)? {
+    let fields = line.split(whereSeparator: { $0.isWhitespace })
+    guard fields.count == 3,
+      let processID = Int32(fields[0]),
+      let cpuPercent = Double(fields[1]),
+      let energyImpact = Double(fields[2])
+    else { return nil }
+    return (processID, ProcessActivity(cpuPercent: cpuPercent, energyImpact: energyImpact))
   }
 
   private static func appBundlePath(from command: String) -> String? {
@@ -129,22 +148,31 @@ actor HighActivityAppMonitor {
     guard !excludedPrefixes.contains(where: bundlePath.hasPrefix) else { return false }
     return !(Bundle(path: bundlePath)?.bundleIdentifier?.hasPrefix("com.apple.") ?? false)
   }
-
-  private static func energyNanojoules(for processID: Int32) -> UInt64? {
-    var usage = rusage_info_v6()
-    let result = withUnsafeMutablePointer(to: &usage) { pointer in
-      let buffer = UnsafeMutableRawPointer(pointer).assumingMemoryBound(to: rusage_info_t?.self)
-      return proc_pid_rusage(processID, RUSAGE_INFO_V6, buffer)
-    }
-    guard result == 0 else { return nil }
-    return usage.ri_energy_nj
-  }
 }
 
 private struct ProcessSample: Sendable {
   let processID: Int32
   let bundlePath: String
-  let energyNanojoules: UInt64
+  let energyImpact: Double
   let cpuPercent: Double
   let memoryBytes: UInt64
+}
+
+private struct ProcessActivity {
+  let cpuPercent: Double
+  let energyImpact: Double
+}
+
+private struct RunningEstimate {
+  private(set) var total = 0.0
+  private(set) var sampleCount = 0
+
+  var average: Double {
+    sampleCount > 0 ? total / Double(sampleCount) : 0
+  }
+
+  mutating func add(_ value: Double) {
+    total += value
+    sampleCount += 1
+  }
 }

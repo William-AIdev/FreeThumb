@@ -18,6 +18,11 @@
 "30m" = "30 min";
 "1h" = "1 h";
 "2h" = "2 h";
+"4h" = "4 h";
+"Enable Sleep Prevention Mode" = "Ativar modo de prevenção do repouso";
+"Disable Sleep Prevention Mode" = "Desativar modo de prevenção do repouso";
+"Enabling Sleep Prevention Mode…" = "Ativando modo de prevenção do repouso…";
+"Disabling Sleep Prevention Mode…" = "Desativando modo de prevenção do repouso…";
 "Restoring sleep…" = "Restaurando repouso…";
 "Starting…" = "Iniciando…";
 "Stop protection" = "Parar proteção";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "Temperatura e potência da bateria";
 "Battery temperature and power chart" = "Gráfico de temperatura e potência da bateria";
 "No third-party app is currently using notable energy." = "Nenhum app de terceiros está usando energia significativa agora.";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "A potência usa os contadores de energia por processo do macOS; a escala Impacto Energético do Monitor de Atividade não é pública.";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "Os gráficos coletam uma amostra por minuto e mantêm até 24 horas na memória. Apps de alto consumo incluem apenas apps de terceiros executados pelo usuário atual.";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Os gráficos coletam uma amostra a cada 30 segundos e mantêm até 24 horas na memória. Apps de alto consumo incluem apenas apps de terceiros executados pelo usuário atual. O número é uma estimativa relativa de longo prazo baseada na média das amostras do top do macOS enquanto a monitorização está ativa; não são watts.";
+"Dismiss" = "Fechar";

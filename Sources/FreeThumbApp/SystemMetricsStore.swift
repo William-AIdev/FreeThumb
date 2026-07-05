@@ -14,7 +14,7 @@ struct HighActivityApp: Identifiable, Sendable {
   var id: Int32 { processID }
   let processID: Int32
   let name: String
-  let powerWatts: Double?
+  let energyImpact: Double
   let cpuPercent: Double
   let memoryBytes: UInt64
 }

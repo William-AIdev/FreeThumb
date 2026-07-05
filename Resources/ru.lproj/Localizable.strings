@@ -18,6 +18,11 @@
 "30m" = "30 мин";
 "1h" = "1 ч";
 "2h" = "2 ч";
+"4h" = "4 ч";
+"Enable Sleep Prevention Mode" = "Включить режим предотвращения сна";
+"Disable Sleep Prevention Mode" = "Выключить режим предотвращения сна";
+"Enabling Sleep Prevention Mode…" = "Включение режима предотвращения сна…";
+"Disabling Sleep Prevention Mode…" = "Выключение режима предотвращения сна…";
 "Restoring sleep…" = "Восстановление режима сна…";
 "Starting…" = "Запуск…";
 "Stop protection" = "Остановить защиту";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "Температура и мощность аккумулятора";
 "Battery temperature and power chart" = "График температуры и мощности аккумулятора";
 "No third-party app is currently using notable energy." = "Сейчас сторонние приложения не потребляют заметной энергии.";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "Мощность рассчитывается по счётчикам энергии процессов macOS; шкала «Энерговлияние» в Мониторинге системы не опубликована.";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "Графики собирают данные раз в минуту и хранят до 24 часов в памяти. В список энергозатратных входят только сторонние приложения текущего пользователя.";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Графики собирают данные каждые 30 секунд и хранят до 24 часов в памяти. В список энергозатратных входят только сторонние приложения текущего пользователя. Число — долгосрочная относительная оценка, усреднённая по данным macOS top во время мониторинга; это не ватты.";
+"Dismiss" = "Закрыть";

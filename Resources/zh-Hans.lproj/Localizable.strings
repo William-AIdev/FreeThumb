@@ -19,6 +19,11 @@
 "30m" = "30 分钟";
 "1h" = "1 小时";
 "2h" = "2 小时";
+"4h" = "4 小时";
+"Enable Sleep Prevention Mode" = "开启防睡眠模式";
+"Disable Sleep Prevention Mode" = "关闭防睡眠模式";
+"Enabling Sleep Prevention Mode…" = "正在开启防睡眠模式…";
+"Disabling Sleep Prevention Mode…" = "正在关闭防睡眠模式…";
 "Restoring sleep…" = "正在恢复睡眠设置…";
 "Starting…" = "正在启动…";
 "Stop protection" = "停止保护";
@@ -126,5 +131,5 @@
 "Battery temperature & power" = "电池温度与功率";
 "Battery temperature and power chart" = "电池温度与功率图表";
 "No third-party app is currently using notable energy." = "当前没有第三方应用正在消耗显著能量。";
-"Power uses macOS per-process energy counters; Activity Monitor's Energy Impact scale is not publicly available." = "功率来自 macOS 每进程能耗计数器；“活动监视器”的“能量影响”标尺未公开。";
-"Charts sample once per minute and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user." = "图表每分钟采样一次，并在内存中保留最多 24 小时。高能耗应用仅包括当前用户运行的第三方应用。";
+"Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "图表每 30 秒采样一次，并在内存中保留最多 24 小时。高能耗应用仅包括当前用户运行的第三方应用；数字是监控开启期间根据 macOS top 采样计算的长期相对估值，不是瓦特。";
+"Dismiss" = "关闭";

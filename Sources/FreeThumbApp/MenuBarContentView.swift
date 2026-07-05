@@ -25,6 +25,7 @@ struct MenuBarContentView: View {
   @AppStorage("showHighActivityAppsWidget") private var showHighActivityAppsWidget = false
   @State private var shouldStartAfterAuthorization = false
   @State private var showsAuthorizationExplanation = false
+  private let durationOptions = [30, 60, 120, 240, 0]
 
   var body: some View {
     VStack(spacing: 0) {
@@ -127,8 +128,12 @@ struct MenuBarContentView: View {
       }
 
       if let error = controller.errorMessage {
-        messageBanner(error, color: .red, icon: "xmark.octagon.fill")
-          .onTapGesture { controller.clearError() }
+        messageBanner(
+          error,
+          color: .red,
+          icon: "exclamationmark.circle.fill",
+          dismiss: controller.clearError
+        )
       }
 
       if let info = controller.infoMessage {
@@ -139,19 +144,41 @@ struct MenuBarContentView: View {
   }
 
   private var controlsSection: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      Text("SESSION")
-        .font(.caption2.weight(.semibold))
-        .foregroundStyle(.secondary)
-
-      Picker("Duration", selection: $sessionMinutes) {
-        Text("∞").tag(0)
-        Text("30m").tag(30)
-        Text("1h").tag(60)
-        Text("2h").tag(120)
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text("Duration")
+        Spacer()
+        Text(localized(durationLabel(for: sessionMinutes)))
+          .foregroundStyle(.secondary)
       }
-      .pickerStyle(.segmented)
-      .disabled(controlsDisabled)
+
+      Slider(value: durationSliderValue, in: 0...Double(durationOptions.count - 1), step: 1)
+        .labelsHidden()
+        .overlay {
+          GeometryReader { geometry in
+            ForEach(durationOptions.indices, id: \.self) { index in
+              Circle()
+                .fill(index == selectedDurationIndex ? Color.accentColor : Color.secondary)
+                .frame(width: 5, height: 5)
+                .position(
+                  x: durationTickPosition(index: index, width: geometry.size.width),
+                  y: geometry.size.height / 2
+                )
+            }
+          }
+          .allowsHitTesting(false)
+        }
+        .disabled(controlsDisabled)
+
+      HStack(spacing: 0) {
+        ForEach(durationOptions, id: \.self) { minutes in
+          Text(localized(durationLabel(for: minutes)))
+            .font(.caption2)
+            .foregroundStyle(minutes == sessionMinutes ? .primary : .secondary)
+            .frame(maxWidth: .infinity)
+        }
+      }
+      .padding(.horizontal, 5)
 
       Button {
         if controller.isProtecting {
@@ -166,14 +193,16 @@ struct MenuBarContentView: View {
               .controlSize(.small)
             Text(
               controller.isProtecting
-                ? localized("Restoring sleep…") : localized("Starting…")
+                ? localized("Disabling Sleep Prevention Mode…")
+                : localized("Enabling Sleep Prevention Mode…")
             )
           }
           .frame(maxWidth: .infinity)
         } else {
           Label(
             controller.isProtecting
-              ? localized("Stop protection") : localized("Start protection"),
+              ? localized("Disable Sleep Prevention Mode")
+              : localized("Enable Sleep Prevention Mode"),
             systemImage: controller.isProtecting ? "stop.fill" : "play.fill"
           )
           .frame(maxWidth: .infinity)
@@ -189,9 +218,6 @@ struct MenuBarContentView: View {
 
   private var footer: some View {
     HStack {
-      Text(footerText)
-        .font(.caption)
-        .foregroundStyle(.secondary)
       Spacer()
       if #available(macOS 14.0, *) {
         SettingsLink {
@@ -221,15 +247,29 @@ struct MenuBarContentView: View {
       .disabled(controller.isTransitioning)
     }
     .padding(.horizontal, 16)
-    .padding(.vertical, 12)
+    .padding(.top, 12)
+    .padding(.bottom, showsAllMonitoringWidgets ? 24 : 12)
   }
 
-  private func messageBanner(_ message: String, color: Color, icon: String) -> some View {
+  private func messageBanner(
+    _ message: String,
+    color: Color,
+    icon: String,
+    dismiss: (() -> Void)? = nil
+  ) -> some View {
     HStack(alignment: .top, spacing: 8) {
       Image(systemName: icon)
       Text(message)
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+      if let dismiss {
+        Button(action: dismiss) {
+          Image(systemName: "xmark.circle.fill")
+        }
+        .buttonStyle(.plain)
+        .help(localized("Dismiss"))
+        .accessibilityLabel(localized("Dismiss"))
+      }
     }
     .foregroundStyle(color)
     .padding(10)
@@ -283,15 +323,42 @@ struct MenuBarContentView: View {
     controller.isProtecting || controller.isTransitioning
   }
 
+  private var selectedDurationIndex: Int {
+    durationOptions.firstIndex(of: sessionMinutes) ?? 0
+  }
+
+  private var durationSliderValue: Binding<Double> {
+    Binding(
+      get: { Double(selectedDurationIndex) },
+      set: { value in
+        let index = min(max(Int(value.rounded()), 0), durationOptions.count - 1)
+        sessionMinutes = durationOptions[index]
+      }
+    )
+  }
+
+  private func durationLabel(for minutes: Int) -> String {
+    switch minutes {
+    case 30: "30m"
+    case 60: "1h"
+    case 120: "2h"
+    case 240: "4h"
+    default: "∞"
+    }
+  }
+
+  private func durationTickPosition(index: Int, width: CGFloat) -> CGFloat {
+    let inset: CGFloat = 8
+    let availableWidth = max(0, width - inset * 2)
+    return inset + availableWidth * CGFloat(index) / CGFloat(durationOptions.count - 1)
+  }
+
   private var showsMonitoringWidgets: Bool {
     showSystemPressureWidget || showBatteryMetricsWidget || showHighActivityAppsWidget
   }
 
-  private var footerText: String {
-    if controller.isProtecting {
-      return localized("System sleep disabled")
-    }
-    return localized("Changes sleep settings while active")
+  private var showsAllMonitoringWidgets: Bool {
+    showSystemPressureWidget && showBatteryMetricsWidget && showHighActivityAppsWidget
   }
 
   private var remainingText: String {
