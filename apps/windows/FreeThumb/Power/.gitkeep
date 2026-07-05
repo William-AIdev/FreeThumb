@@ -1,0 +1,1 @@
+# Win32 power wrappers: PowerCreateRequest/PowerSetRequest, GetSystemPowerStatus, lid/AC event notifications, capability diagnostics.

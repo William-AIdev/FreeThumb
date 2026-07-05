@@ -4,7 +4,7 @@
 [한국어](README.ko.md)
 
 <p align="center">
-  <img src="Resources/AppIcon.png" width="160" alt="FreeThumb 应用图标">
+  <img src="apps/macos/Resources/AppIcon.png" width="160" alt="FreeThumb 应用图标">
 </p>
 
 让 Mac 在锁屏或合盖后继续执行长时间任务。
@@ -47,9 +47,10 @@ macOS 用户打开 DMG，将 `FreeThumb.app` 拖到 Applications 文件夹。如
 xcode-select --install
 ```
 
-在项目目录中构建并打开应用：
+在 `apps/macos` 目录中构建并打开应用：
 
 ```sh
+cd apps/macos
 ./scripts/build-app.sh
 open dist/FreeThumb.app
 ```
@@ -57,6 +58,7 @@ open dist/FreeThumb.app
 如需生成拖拽安装的 DMG：
 
 ```sh
+cd apps/macos
 ./scripts/build-dmg.sh
 ```
 

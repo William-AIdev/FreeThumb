@@ -4,7 +4,7 @@
 [한국어](README.ko.md)
 
 <p align="center">
-  <img src="Resources/AppIcon.png" width="160" alt="FreeThumb app icon">
+  <img src="apps/macos/Resources/AppIcon.png" width="160" alt="FreeThumb app icon">
 </p>
 
 Keep long-running work alive on your Mac—even when you lock the screen or close
@@ -60,9 +60,10 @@ Install Xcode Command Line Tools if needed:
 xcode-select --install
 ```
 
-From the project directory, build and open the app:
+From the `apps/macos` directory, build and open the app:
 
 ```sh
+cd apps/macos
 ./scripts/build-app.sh
 open dist/FreeThumb.app
 ```
@@ -70,6 +71,7 @@ open dist/FreeThumb.app
 To create the drag-and-drop DMG:
 
 ```sh
+cd apps/macos
 ./scripts/build-dmg.sh
 ```
 

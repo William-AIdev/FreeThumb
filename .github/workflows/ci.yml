@@ -12,6 +12,9 @@ jobs:
     name: macOS build and test
     runs-on: macos-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/macos
 
     steps:
       - name: Check out repository
