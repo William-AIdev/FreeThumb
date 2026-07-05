@@ -36,7 +36,7 @@
 "Unlimited" = "Illimité";
 "System pressure" = "Pression système";
 "Battery temperature" = "Température de la batterie";
-"Battery power draw" = "Puissance de la batterie";
+"Total power draw" = "Puissance totale consommée";
 "High energy apps (estimated)" = "Apps énergivores (estimation)";
 "No process is currently above 0.5% CPU." = "Aucun processus ne dépasse actuellement 0,5 % de CPU.";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "L’activité CPU est un indicateur, pas une mesure directe par app.";
@@ -128,8 +128,8 @@
 "Recording is off. Existing session data is retained for comparison." = "L’enregistrement est désactivé. Les données existantes sont conservées pour comparaison.";
 "Samples are recorded once per minute. A battery drop from 80% to 79% is one percentage point. App rows assign each interval to the app that was in front at its start; they do not measure that app's actual energy use. macOS thermal pressure is shown instead of an unsupported CPU temperature estimate." = "Une mesure est enregistrée chaque minute. Une baisse de 80 % à 79 % vaut un point. Chaque intervalle est attribué à l’app au premier plan au début, sans mesurer sa consommation réelle. La pression thermique macOS remplace une estimation non prise en charge de la température CPU.";
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "Premier plan : %@ · Baisse de batterie : %d points · Pic thermique : %@";
-"Battery temperature & power" = "Température et puissance de la batterie";
-"Battery temperature and power chart" = "Graphique température et puissance de batterie";
+"Battery temperature & total power" = "Température de la batterie et puissance totale";
+"Battery temperature and total power chart" = "Graphique température de batterie et puissance totale";
 "No third-party app is currently using notable energy." = "Aucune app tierce n’utilise actuellement une quantité notable d’énergie.";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Les graphiques prélèvent une mesure toutes les 30 secondes et conservent jusqu’à 24 heures en mémoire. Les apps énergivores incluent uniquement les apps tierces exécutées par l’utilisateur actuel. Le nombre est une estimation relative à long terme, moyenne des échantillons de top de macOS pendant la surveillance ; ce ne sont pas des watts.";
 "Dismiss" = "Fermer";

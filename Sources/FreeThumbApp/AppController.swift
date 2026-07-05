@@ -423,7 +423,7 @@ final class AppController: ObservableObject {
           memoryUsedBytes: metric.memoryUsedBytes,
           memoryPercent: metric.memoryPercent,
           batteryTemperatureCelsius: metric.batteryTemperatureCelsius,
-          batteryPowerWatts: metric.batteryPowerWatts
+          systemPowerWatts: metric.systemPowerWatts
         )
       )
       if metricSamples.count > 2_880 {

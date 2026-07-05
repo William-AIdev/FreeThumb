@@ -8,7 +8,7 @@ public struct PerformanceMetricSnapshot: Sendable {
   public let memoryUsedBytes: UInt64
   public let memoryPercent: Double
   public let batteryTemperatureCelsius: Double?
-  public let batteryPowerWatts: Double?
+  public let systemPowerWatts: Double?
 }
 
 public final class PerformanceMetricsMonitor {
@@ -21,14 +21,14 @@ public final class PerformanceMetricsMonitor {
   public func snapshot() -> PerformanceMetricSnapshot {
     let cpuPercent = currentCPUPercent()
     let memory = Self.readMemoryUsage()
-    let battery = Self.readBatteryMetrics()
+    let power = Self.readPowerMetrics()
     return PerformanceMetricSnapshot(
       capturedAt: Date(),
       cpuPercent: cpuPercent,
       memoryUsedBytes: memory.usedBytes,
       memoryPercent: memory.percent,
-      batteryTemperatureCelsius: battery.temperatureCelsius,
-      batteryPowerWatts: battery.powerWatts
+      batteryTemperatureCelsius: power.temperatureCelsius,
+      systemPowerWatts: power.totalPowerWatts
     )
   }
 
@@ -86,8 +86,8 @@ public final class PerformanceMetricsMonitor {
     return (used, percent)
   }
 
-  private static func readBatteryMetrics() -> (
-    temperatureCelsius: Double?, powerWatts: Double?
+  private static func readPowerMetrics() -> (
+    temperatureCelsius: Double?, totalPowerWatts: Double?
   ) {
     let service = IOServiceGetMatchingService(
       kIOMainPortDefault,
@@ -107,6 +107,19 @@ public final class PerformanceMetricsMonitor {
       normalizedBatteryTemperature($0.doubleValue)
     }
     let isExternallyPowered = (values["ExternalConnected"] as? NSNumber)?.boolValue ?? false
+    let telemetry = values["PowerTelemetryData"] as? [String: Any]
+    let telemetryKeys =
+      isExternallyPowered
+      ? ["SystemPowerIn", "WallEnergyEstimate", "SystemLoad"]
+      : ["SystemLoad", "BatteryPower"]
+    for key in telemetryKeys {
+      guard let number = telemetry?[key] as? NSNumber else { continue }
+      let milliwatts = abs(number.int64Value)
+      if milliwatts > 0, milliwatts < 500_000 {
+        return (temperature, Double(milliwatts) / 1_000)
+      }
+    }
+
     guard !isExternallyPowered,
       let voltageMillivolts = (values["Voltage"] as? NSNumber)?.doubleValue,
       let currentMilliamps = (values["InstantAmperage"] as? NSNumber)?.int64Value

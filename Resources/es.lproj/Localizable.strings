@@ -37,7 +37,7 @@
 "Unlimited" = "Sin límite";
 "System pressure" = "Presión del sistema";
 "Battery temperature" = "Temperatura de la batería";
-"Battery power draw" = "Consumo de la batería";
+"Total power draw" = "Consumo total";
 "High energy apps (estimated)" = "Apps de alto consumo (estimado)";
 "No process is currently above 0.5% CPU." = "Ningún proceso supera actualmente el 0,5 % de CPU.";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "La actividad de CPU es una aproximación, no una medición directa por app.";
@@ -128,8 +128,8 @@
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "Tiempo en primer plano: %@ · Descenso de batería: %d puntos · Pico térmico: %@";
 "%dh %dm" = "%d h %d min";
 "%dm" = "%d min";
-"Battery temperature & power" = "Temperatura y potencia de la batería";
-"Battery temperature and power chart" = "Gráfico de temperatura y potencia de batería";
+"Battery temperature & total power" = "Temperatura de la batería y potencia total";
+"Battery temperature and total power chart" = "Gráfico de temperatura de batería y potencia total";
 "No third-party app is currently using notable energy." = "Ninguna app de terceros está usando energía destacable ahora.";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Los gráficos toman una muestra cada 30 segundos y guardan hasta 24 horas en memoria. Las apps de alto consumo solo incluyen apps de terceros ejecutadas por el usuario actual. El número es una estimación relativa a largo plazo basada en el promedio de muestras de top de macOS mientras la supervisión está activa; no son vatios.";
 "Dismiss" = "Cerrar";

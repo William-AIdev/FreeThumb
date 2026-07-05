@@ -96,7 +96,7 @@ struct MenuMetricsView: View {
 
       if showBatteryMetrics {
         metricCard(
-          "Battery temperature & power",
+          "Battery temperature & total power",
           currentValue: batteryMetricsValue,
           metrics: [.battery],
           chartHeight: 165
@@ -104,7 +104,7 @@ struct MenuMetricsView: View {
           VStack(spacing: 4) {
             HStack(spacing: 12) {
               metricLegend(color: .blue, title: "Battery temperature")
-              metricLegend(color: .purple, title: "Battery power draw")
+              metricLegend(color: .purple, title: "Total power draw")
             }
             .font(.caption2)
             batteryChart
@@ -188,8 +188,8 @@ struct MenuMetricsView: View {
   }
 
   private var powerValue: String {
-    latest?.batteryPowerWatts.map { String(format: "%.2f W", $0) }
-      ?? localized("On AC / unavailable")
+    latest?.systemPowerWatts.map { String(format: "%.2f W", $0) }
+      ?? localized("Unavailable")
   }
 
   private var batteryMetricsValue: String {
@@ -207,7 +207,7 @@ struct MenuMetricsView: View {
           )
           .foregroundStyle(.blue)
         }
-        if let power = sample.batteryPowerWatts {
+        if let power = sample.systemPowerWatts {
           LineMark(
             x: .value("Time", sample.capturedAt),
             y: .value("Power", normalized(power, in: powerDomain)),
@@ -226,7 +226,7 @@ struct MenuMetricsView: View {
             )
             .foregroundStyle(.blue)
           }
-          if let power = sample.batteryPowerWatts {
+          if let power = sample.systemPowerWatts {
             PointMark(
               x: .value("Time", sample.capturedAt),
               y: .value("Power", normalized(power, in: powerDomain))
@@ -300,7 +300,7 @@ struct MenuMetricsView: View {
   }
 
   private var powerDomain: ClosedRange<Double> {
-    paddedDomain(store.samples.compactMap(\.batteryPowerWatts), fallback: 0...10)
+    paddedDomain(store.samples.compactMap(\.systemPowerWatts), fallback: 0...10)
   }
 
   private func paddedDomain(
@@ -391,7 +391,7 @@ struct MenuMetricsView: View {
     VStack(alignment: .leading, spacing: 2) {
       Text(sample.capturedAt, format: .dateTime.hour().minute())
       Text(sample.batteryTemperatureCelsius.map { String(format: "%.1f°C", $0) } ?? "—")
-      Text(sample.batteryPowerWatts.map { String(format: "%.2f W", $0) } ?? "—")
+      Text(sample.systemPowerWatts.map { String(format: "%.2f W", $0) } ?? "—")
     }
     .tooltipStyle()
   }

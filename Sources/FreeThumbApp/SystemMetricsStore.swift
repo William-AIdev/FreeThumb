@@ -7,7 +7,7 @@ struct SystemMetricSample: Identifiable, Sendable {
   let memoryUsedBytes: UInt64
   let memoryPercent: Double
   let batteryTemperatureCelsius: Double?
-  let batteryPowerWatts: Double?
+  let systemPowerWatts: Double?
 }
 
 struct HighActivityApp: Identifiable, Sendable {

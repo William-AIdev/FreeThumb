@@ -36,7 +36,7 @@
 "Unlimited" = "असीमित";
 "System pressure" = "सिस्टम दबाव";
 "Battery temperature" = "बैटरी तापमान";
-"Battery power draw" = "बैटरी पावर खपत";
+"Total power draw" = "कुल पावर खपत";
 "High energy apps (estimated)" = "अधिक ऊर्जा वाले ऐप (अनुमानित)";
 "No process is currently above 0.5% CPU." = "अभी कोई प्रक्रिया 0.5% CPU से ऊपर नहीं है।";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "CPU गतिविधि केवल संकेतक है, प्रति ऐप सीधा ऊर्जा मापन नहीं।";
@@ -128,8 +128,8 @@
 "Recording is off. Existing session data is retained for comparison." = "रिकॉर्डिंग बंद है। तुलना के लिए मौजूदा सत्र डेटा रखा गया है।";
 "Samples are recorded once per minute. A battery drop from 80% to 79% is one percentage point. App rows assign each interval to the app that was in front at its start; they do not measure that app's actual energy use. macOS thermal pressure is shown instead of an unsupported CPU temperature estimate." = "हर मिनट नमूना रिकॉर्ड होता है। 80% से 79% की गिरावट एक प्रतिशत अंक है। हर अंतराल उसके आरंभ के अग्रभूमि ऐप को दिया जाता है; यह वास्तविक ऐप ऊर्जा नहीं मापता। असमर्थित CPU तापमान के बजाय macOS तापीय दबाव दिखता है।";
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "अग्रभूमि समय: %@ · बैटरी गिरावट: %d प्रतिशत अंक · अधिकतम तापीय दबाव: %@";
-"Battery temperature & power" = "बैटरी तापमान और पावर";
-"Battery temperature and power chart" = "बैटरी तापमान और पावर चार्ट";
+"Battery temperature & total power" = "बैटरी तापमान और कुल पावर";
+"Battery temperature and total power chart" = "बैटरी तापमान और कुल पावर चार्ट";
 "No third-party app is currently using notable energy." = "अभी कोई तृतीय-पक्ष ऐप उल्लेखनीय ऊर्जा उपयोग नहीं कर रहा है।";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "चार्ट हर 30 सेकंड में नमूना लेते हैं और 24 घंटे तक मेमोरी में रखते हैं। उच्च ऊर्जा ऐप में केवल वर्तमान उपयोगकर्ता द्वारा चलाए गए तृतीय-पक्ष ऐप शामिल हैं। यह संख्या मॉनिटरिंग चालू रहने के दौरान macOS top नमूनों का दीर्घकालिक सापेक्ष औसत है; यह वाट नहीं है।";
 "Dismiss" = "बंद करें";

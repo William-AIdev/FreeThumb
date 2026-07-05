@@ -36,7 +36,7 @@
 "Unlimited" = "Без ограничения";
 "System pressure" = "Нагрузка системы";
 "Battery temperature" = "Температура аккумулятора";
-"Battery power draw" = "Потребление аккумулятора";
+"Total power draw" = "Общая потребляемая мощность";
 "High energy apps (estimated)" = "Энергоёмкие приложения (оценка)";
 "No process is currently above 0.5% CPU." = "Сейчас нет процессов с загрузкой CPU выше 0,5 %.";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "Загрузка CPU — ориентир, а не прямое измерение энергии приложения.";
@@ -128,8 +128,8 @@
 "Recording is off. Existing session data is retained for comparison." = "Запись выключена. Существующие данные сохранены для сравнения.";
 "Samples are recorded once per minute. A battery drop from 80% to 79% is one percentage point. App rows assign each interval to the app that was in front at its start; they do not measure that app's actual energy use. macOS thermal pressure is shown instead of an unsupported CPU temperature estimate." = "Данные записываются раз в минуту. Снижение с 80% до 79% — один процентный пункт. Интервал относится к приложению, активному в его начале, и не измеряет реальное потребление. Показывается тепловая нагрузка macOS, а не неподдерживаемая оценка температуры CPU.";
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "Активно: %@ · Снижение батареи: %d п.п. · Пиковая тепловая нагрузка: %@";
-"Battery temperature & power" = "Температура и мощность аккумулятора";
-"Battery temperature and power chart" = "График температуры и мощности аккумулятора";
+"Battery temperature & total power" = "Температура аккумулятора и общая мощность";
+"Battery temperature and total power chart" = "График температуры аккумулятора и общей мощности";
 "No third-party app is currently using notable energy." = "Сейчас сторонние приложения не потребляют заметной энергии.";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Графики собирают данные каждые 30 секунд и хранят до 24 часов в памяти. В список энергозатратных входят только сторонние приложения текущего пользователя. Число — долгосрочная относительная оценка, усреднённая по данным macOS top во время мониторинга; это не ватты.";
 "Dismiss" = "Закрыть";

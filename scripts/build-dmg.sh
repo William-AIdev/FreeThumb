@@ -65,7 +65,7 @@ tell application "Finder"
   set toolbar visible of dmgWindow to false
   set statusbar visible of dmgWindow to false
   set pathbar visible of dmgWindow to false
-  set bounds of dmgWindow to {180, 120, 900, 600}
+  set bounds of dmgWindow to {180, 120, 900, 700}
   set theViewOptions to icon view options of dmgWindow
   set arrangement of theViewOptions to not arranged
   set icon size of theViewOptions to 112

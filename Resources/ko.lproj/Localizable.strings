@@ -37,7 +37,7 @@
 "Unlimited" = "무제한";
 "System pressure" = "시스템 압력";
 "Battery temperature" = "배터리 온도";
-"Battery power draw" = "배터리 소비 전력";
+"Total power draw" = "총 소비 전력";
 "High energy apps (estimated)" = "에너지 사용량이 높은 앱(추정)";
 "No process is currently above 0.5% CPU." = "현재 CPU 사용률이 0.5%를 넘는 프로세스가 없습니다.";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "CPU 활동은 참고용 지표이며 앱별 에너지 사용량을 직접 측정한 값이 아닙니다.";
@@ -128,8 +128,8 @@
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "전면 사용 시간: %@ · 배터리 감소: %d퍼센트포인트 · 최고 열 압력: %@";
 "%dh %dm" = "%d시간 %d분";
 "%dm" = "%d분";
-"Battery temperature & power" = "배터리 온도 및 전력";
-"Battery temperature and power chart" = "배터리 온도 및 전력 차트";
+"Battery temperature & total power" = "배터리 온도 및 총 전력";
+"Battery temperature and total power chart" = "배터리 온도 및 총 전력 차트";
 "No third-party app is currently using notable energy." = "현재 눈에 띄는 에너지를 사용하는 타사 앱이 없습니다.";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "차트는 30초마다 샘플링하고 메모리에 최대 24시간의 데이터를 보관합니다. 고에너지 앱에는 현재 사용자가 실행한 타사 앱만 포함됩니다. 숫자는 모니터링이 켜진 동안 macOS top 샘플을 평균한 장기 상대 추정치이며 와트가 아닙니다.";
 "Dismiss" = "닫기";

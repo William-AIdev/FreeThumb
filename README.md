@@ -25,7 +25,7 @@ FreeThumb 是一款轻量级 macOS 菜单栏应用，可防止系统休眠，让
 - Supports closed-lid operation and restores the previous sleep setting when
   protection ends.
 - Shows battery, power source, Low Power Mode, lid, and thermal status.
-- Offers optional system-pressure and battery temperature/power charts.
+- Offers optional system-pressure and battery temperature/total-power charts.
 - Sends optional local, iMessage, Mail, or HTTPS webhook alerts.
 - Records battery use, thermal pressure, and approximate foreground-app
   activity during a protection session.
@@ -113,14 +113,15 @@ Click the gear button at the bottom of the FreeThumb menu.
   apply immediately.
 - **Launch at login:** start FreeThumb automatically after signing in.
 - **Menu bar monitoring:** show or hide the system-pressure chart, the combined
-  battery temperature/power chart, and the estimated high-energy app list.
+  battery temperature/total-power chart, and the estimated high-energy app list.
 - **Check for updates:** enter a project-provided HTTPS release manifest URL,
   then check manually. FreeThumb never installs an update silently.
 
 The charts sample every 30 seconds and retain up to 24 hours in memory. The
-combined battery chart uses temperature on the left axis and battery power on
-the right axis. Battery discharge power may be unavailable while connected to
-AC power. The high-energy list includes only third-party apps run by the current
+combined chart uses battery temperature on the left axis and total power on
+the right axis. On battery, total power uses battery output; on AC, it uses total
+adapter input, including power used to charge the battery. The high-energy list
+includes only third-party apps run by the current
 user and ranks them using a running average of the relative values reported by
 macOS `top`, aggregated across each app's processes. It is not power measured
 in watts. Sampling occurs every five minutes in the background and every minute
@@ -197,10 +198,10 @@ sleep setting if the app exits unexpectedly after changing it.
 Open **Settings → Alerts**, click **Refresh Status**, and enable FreeThumb in
 **System Settings → Notifications** if macOS has blocked it.
 
-**Battery power shows unavailable**
+**Total power is higher while connected to AC**
 
-Battery-side discharge power is normally unavailable while the Mac is powered
-by its adapter.
+This is expected while charging: the AC value includes both the Mac's current
+system load and power flowing into the battery.
 
 **Protection does not start**
 

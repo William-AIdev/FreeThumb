@@ -37,7 +37,7 @@
 "Unlimited" = "无限时长";
 "System pressure" = "系统压力";
 "Battery temperature" = "电池温度";
-"Battery power draw" = "电池耗电功率";
+"Total power draw" = "总耗电功率";
 "High energy apps (estimated)" = "高能耗应用（估算）";
 "No process is currently above 0.5% CPU." = "当前没有 CPU 占用超过 0.5% 的进程。";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "CPU 活动仅作为参考，并非每个应用的直接能耗测量。";
@@ -128,8 +128,8 @@
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "前台时长：%@ · 电量下降：%d 个百分点 · 最高热压力：%@";
 "%dh %dm" = "%d 小时 %d 分钟";
 "%dm" = "%d 分钟";
-"Battery temperature & power" = "电池温度与功率";
-"Battery temperature and power chart" = "电池温度与功率图表";
+"Battery temperature & total power" = "电池温度与总功率";
+"Battery temperature and total power chart" = "电池温度与总功率图表";
 "No third-party app is currently using notable energy." = "当前没有第三方应用正在消耗显著能量。";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "图表每 30 秒采样一次，并在内存中保留最多 24 小时。高能耗应用仅包括当前用户运行的第三方应用；数字是监控开启期间根据 macOS top 采样计算的长期相对估值，不是瓦特。";
 "Dismiss" = "关闭";

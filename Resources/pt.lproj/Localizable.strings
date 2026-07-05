@@ -36,7 +36,7 @@
 "Unlimited" = "Sem limite";
 "System pressure" = "Pressão do sistema";
 "Battery temperature" = "Temperatura da bateria";
-"Battery power draw" = "Consumo da bateria";
+"Total power draw" = "Consumo total";
 "High energy apps (estimated)" = "Apps de alto consumo (estimado)";
 "No process is currently above 0.5% CPU." = "Nenhum processo está acima de 0,5% de CPU.";
 "CPU activity is a proxy, not a direct per-app energy measurement." = "A atividade da CPU é uma aproximação, não uma medição direta por app.";
@@ -128,8 +128,8 @@
 "Recording is off. Existing session data is retained for comparison." = "O registro está desativado. Os dados existentes são mantidos para comparação.";
 "Samples are recorded once per minute. A battery drop from 80% to 79% is one percentage point. App rows assign each interval to the app that was in front at its start; they do not measure that app's actual energy use. macOS thermal pressure is shown instead of an unsupported CPU temperature estimate." = "Uma amostra é registrada por minuto. Uma queda de 80% para 79% equivale a um ponto percentual. Cada intervalo é atribuído ao app em primeiro plano no início, sem medir seu consumo real. A pressão térmica do macOS substitui uma estimativa não suportada da temperatura da CPU.";
 "Foreground time: %@ · Battery drop: %d percentage points · Peak thermal pressure: %@" = "Tempo em primeiro plano: %@ · Queda da bateria: %d pontos · Pico térmico: %@";
-"Battery temperature & power" = "Temperatura e potência da bateria";
-"Battery temperature and power chart" = "Gráfico de temperatura e potência da bateria";
+"Battery temperature & total power" = "Temperatura da bateria e potência total";
+"Battery temperature and total power chart" = "Gráfico de temperatura da bateria e potência total";
 "No third-party app is currently using notable energy." = "Nenhum app de terceiros está usando energia significativa agora.";
 "Charts sample every 30 seconds and keep up to 24 hours in memory. High energy apps includes only third-party apps run by the current user. Its number is a long-term relative estimate from macOS top, averaged while monitoring is enabled; it is not watts." = "Os gráficos coletam uma amostra a cada 30 segundos e mantêm até 24 horas na memória. Apps de alto consumo incluem apenas apps de terceiros executados pelo usuário atual. O número é uma estimativa relativa de longo prazo baseada na média das amostras do top do macOS enquanto a monitorização está ativa; não são watts.";
 "Dismiss" = "Fechar";

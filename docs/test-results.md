@@ -124,7 +124,7 @@ remain user-controlled checks in `docs/planned-features-test-plan.md`.
 
 ## 2026-07-04 — Optional menu monitoring widgets
 
-- CPU and memory pressure plus the combined battery temperature/power card
+- CPU and memory pressure plus the combined battery temperature/total-power card
   share one 30-second sample and retain at most 2,880 points: **implemented**
 - The pressure and combined battery cards can be hidden independently;
   disabling both stops the metric sampler: **implemented**
@@ -138,7 +138,7 @@ remain user-controlled checks in `docs/planned-features-test-plan.md`.
   rendering is deferred until the menu opens and capped at 240 plotted points:
   **implemented after runtime profiling**
 - Live sensor sanity check: **CPU 9.73%, memory 46.1 GB, battery 30.31°C**
-- Battery power correctly reports unavailable while connected to AC: **passed**
+- Total power uses AC input while connected and battery output while unplugged: **passed**
 - Final closed-menu runtime sample across thirty two-second intervals: **29 at
   0.0% CPU and one 0.9% collection spike; 16–17 MB resident memory**
 - Metric cards keep only current values and charts, without redundant average
