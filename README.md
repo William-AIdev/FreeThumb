@@ -20,6 +20,7 @@ FreeThumb 是一款轻量级 macOS 菜单栏应用，可防止系统休眠，让
 
 ## What it does
 
+
 - Keeps macOS awake for 30 minutes, 1 hour, 2 hours, 4 hours, or until you stop it.
 - Continues working while macOS is locked.
 - Supports closed-lid operation and restores the previous sleep setting when
@@ -30,6 +31,7 @@ FreeThumb 是一款轻量级 macOS 菜单栏应用，可防止系统休眠，让
 - Records battery use, thermal pressure, and approximate foreground-app
   activity during a protection session.
 - Supports ten interface languages and launch at login.
+<img width="340" height="910" alt="image" src="https://github.com/user-attachments/assets/7b73f73f-71e0-4f47-b8c4-42d2a81d0ec0" />
 
 ## Requirements
 
